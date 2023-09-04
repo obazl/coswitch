@@ -1,3 +1,8 @@
+.bazel
+bazel-*
+*.tgz
+log.*
+
 # Prerequisites
 *.d
 
