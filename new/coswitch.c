@@ -351,8 +351,7 @@ void pkg_handler(char *site_lib,
 UT_string *_config_bzlmod_registry(char *switch_name,
                                    UT_string *coswitch_root)
 {
-    log_debug("_config_bzlmod_registry %s, %s",
-              switch_name, utstring_body(coswitch_root));
+    TRACE_ENTRY;
     UT_string *obazl_registry_home;
     utstring_new(obazl_registry_home);
     utstring_printf(obazl_registry_home,
@@ -418,15 +417,13 @@ UT_string *_config_bzlmod_registry(char *switch_name,
                  utstring_body(obazl_registry_home));
     mkdir_r(utstring_body(obazl_registry_home));
     return obazl_registry_home;
+    TRACE_EXIT;
 }
 
 void _write_registry_directive(char *registry)
                                /* char *switch_name) */
 {
-    log_debug("_write_registry_directive: %s", //%s",
-              registry); //, switch_name);
-    /* char *home = getenv("HOME"); */
-    //FIXME: verify $HOME defined
+    TRACE_ENTRY;
 
     UT_string *content;
     utstring_new(content);
@@ -463,6 +460,7 @@ void _write_registry_directive(char *registry)
 
     utstring_free(fname);
     utstring_free(content);
+    TRACE_EXIT;
 }
 
 /**
@@ -473,7 +471,7 @@ void _write_registry_directive(char *registry)
       - MODULE.bazel to coswitch
       - registry record
  */
-int main(int argc, char *argv[], char **envp)
+int main(int argc, char *argv[])
 {
     argc = gopt(argv, options);
     (void)argc;
@@ -540,7 +538,7 @@ int main(int argc, char *argv[], char **envp)
     if (options[OPT_SWITCH].count) {
         switch_name = options[OPT_SWITCH].argument;
     } else {
-        switch_name = opam_switch_name(envp);
+        switch_name = opam_switch_name();
     }
 
     char *compiler_version = opam_switch_base_compiler_version(switch_name);
@@ -582,7 +580,7 @@ int main(int argc, char *argv[], char **envp)
                         "%s/obazl",
                         xdg_data_home()); // ~/.local/share
     }
-    log_debug("coswitch_root: %s", utstring_body(coswitch_root));
+    /* log_debug("coswitch_root: %s", utstring_body(coswitch_root)); */
 
     UT_string *coswitch_lib;
     utstring_new(coswitch_lib);
@@ -671,7 +669,6 @@ int main(int argc, char *argv[], char **envp)
                          switch_name,
                          switch_pfx,
                          utstring_body(coswitch_lib));
-    log_debug("BBBBBBBBBBBBBBBB");
     free(switch_lib);
     utstring_free(meta_path);
 
