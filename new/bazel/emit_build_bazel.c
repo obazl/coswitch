@@ -2998,7 +2998,7 @@ void emit_pkg_symlinks(UT_string *opam_switch_lib,
                 if (coswitch_debug)
                     log_debug("Skipping missing 'topkg-care'");
 #endif
-                if (verbose)
+                if (verbosity > 2)
                     log_info("Skipping missing pkg 'topkg-care'");
                 return;
             }
@@ -3011,7 +3011,7 @@ void emit_pkg_symlinks(UT_string *opam_switch_lib,
             /* log_info("XXXX configurator ptr: %s", ptr); */
             if (len > 20) {
                 if (strncmp(ptr, "lib/dune/configurator", 21) == 0) {
-                    if (verbose)
+                    if (verbosity > 2)
                         log_warn("Skipping dune/configurator; use @dune-configurator instead.");
                     return;
                 } else {

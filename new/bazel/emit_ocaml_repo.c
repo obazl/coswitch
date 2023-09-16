@@ -2656,10 +2656,6 @@ EXPORT void emit_ocaml_workspace(UT_string *registry,
 
     char *switch_lib = opam_switch_lib(switch_name);
 
-    // emit registry record for @ocaml
-    if (verbosity > 0)
-        log_debug("registry: %s", utstring_body(registry));
-
     /* this emits reg record for both ocaml and stublibs pkgs */
     emit_registry_record(registry, compiler_version, NULL, pkgs);
 

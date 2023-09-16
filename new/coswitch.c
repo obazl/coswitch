@@ -60,6 +60,7 @@ UT_string *coswitch_runfiles_root;
 char *default_version = "0.0.0";
 int   default_compat  = 0;
 
+bool quiet;
 bool verbose;
 int  verbosity;
 
@@ -210,7 +211,7 @@ void pkg_handler(char *site_lib,
     if (pkg == NULL) {
         if (errno == -1) {
 /* #if defined(TRACING) */
-            if (verbose)
+            if (verbosity > 2)
                 log_warn("Empty META file: %s", utstring_body(meta_path));
 /* #endif */
             /* check dune-package for installed executables */
@@ -227,8 +228,9 @@ void pkg_handler(char *site_lib,
         /* emitted_bootstrapper = false; */
     } else {
         /* #if defined(DEVBUILD) */
-        if (verbose)
-            log_info("PARSED %s", utstring_body(meta_path));
+        if (verbosity > 2) {
+            log_info("Parsed %d %s", verbosity, utstring_body(meta_path));
+        }
         /* if (coswitch_debug_findlib) */
         /* DUMP_PKG(0, pkg); */
         /* #endif */
@@ -348,121 +350,6 @@ void pkg_handler(char *site_lib,
     /*                 pkg->name); */
 }
 
-UT_string *_config_bzlmod_registry(char *switch_name,
-                                   UT_string *coswitch_root)
-{
-    TRACE_ENTRY;
-    UT_string *obazl_registry_home;
-    utstring_new(obazl_registry_home);
-    utstring_printf(obazl_registry_home,
-                    "%s/registry/%s",
-                    utstring_body(coswitch_root),
-                    switch_name);
-
-    if (verbosity > 0)
-        log_info("registry home: %s",
-                 utstring_body(obazl_registry_home));
-    mkdir_r(utstring_body(obazl_registry_home));
-
-    // write: bazel_registry.json
-    // also MODULE.bazel, WORKSPACE???
-
-    UT_string *module_base_path;
-    utstring_new(module_base_path);
-    utstring_printf(module_base_path,
-                    "%s/opam/%s/lib",
-                    utstring_body(coswitch_root),
-                    switch_name);
-    if (verbosity > 0)
-        log_info("module_base_path: %s",
-                 utstring_body(module_base_path));
-    // alternative: mbp = XDG/share/obazl/opam/<switch>
-    // or we could put coswitch stuff directly in the registry
-
-    char *bazel_registry_template = ""
-        "{\n"
-        "    \"mirrors\": [],\n"
-        "    \"module_base_path\": \"%s\"\n"
-        "}\n";
-
-    UT_string *bazel_registry_json;
-    utstring_new(bazel_registry_json);
-    utstring_printf(bazel_registry_json,
-                    bazel_registry_template,
-                    utstring_body(module_base_path));
-    utstring_free(module_base_path);
-
-    if (verbose)
-        log_info("bazel_registry_json:\n%s",
-                 utstring_body(bazel_registry_json));
-
-    UT_string *obazl_registry_json_file;
-    utstring_new(obazl_registry_json_file);
-    utstring_printf(obazl_registry_json_file,
-                    "%s/bazel_registry.json",
-                    utstring_body(obazl_registry_home));
-    if (verbose)
-        log_info("bazel_registry.json:\n%s",
-                 utstring_body(obazl_registry_json_file));
-    FILE *bazel_registry_json_fd
-        = fopen(utstring_body(obazl_registry_json_file), "w");
-    fprintf(bazel_registry_json_fd,
-            "%s", utstring_body(bazel_registry_json));
-    fclose (bazel_registry_json_fd);
-
-    /* utstring_printf(obazl_registry_home, */
-    /*                 "/%s", "modules"); */
-    if (verbose)
-        log_info("registry home: %s",
-                 utstring_body(obazl_registry_home));
-    mkdir_r(utstring_body(obazl_registry_home));
-    return obazl_registry_home;
-    TRACE_EXIT;
-}
-
-void _write_registry_directive(char *registry)
-                               /* char *switch_name) */
-{
-    TRACE_ENTRY;
-
-    UT_string *content;
-    utstring_new(content);
-    utstring_printf(content,
-                    "common --registry=file://%s", // /%s",
-                    registry); //, switch_name);
-    /* log_debug("CONTENT: %s", utstring_body(content)); */
-
-    UT_string *fname;
-    utstring_new(fname);
-    char *wsd = getenv("BUILD_WORKSPACE_DIRECTORY");
-    utstring_printf(fname,
-                    "%s/.config",
-                    wsd);
-    mkdir_r(utstring_body(fname));
-    utstring_printf(fname, "/coswitch_registry.bazelrc");
-    /* log_debug("bazelrc: %s", utstring_body(fname)); */
-
-    FILE *ostream;
-    errno = 0;
-    ostream = fopen(utstring_body(fname), "w");
-    if (ostream == NULL) {
-        log_error("Fileopen %s error %s",
-                  utstring_body(fname),
-                  strerror(errno));
-        return;
-    }
-    fprintf(ostream, "%s", utstring_body(content));
-    fclose(ostream);
-
-    if (verbosity > log_writes)
-        fprintf(INFOFD, GRN "INFO" CRESET
-                " WROTE: %s\n", utstring_body(fname));
-
-    utstring_free(fname);
-    utstring_free(content);
-    TRACE_EXIT;
-}
-
 /**
    Method:
    1. Iterate over switch, converting META to BUILD.bazel
@@ -540,14 +427,18 @@ int main(int argc, char *argv[])
     } else {
         switch_name = opam_switch_name();
     }
+    if (options[FLAG_QUIET].count) {
+        quiet = true;
+    }
 
     char *compiler_version = opam_switch_base_compiler_version(switch_name);
 
     char *switch_pfx = opam_switch_prefix(switch_name);
-    if (verbose) log_info("switch prefix: %s", switch_pfx);
+    if (verbosity > 0)
+        log_info("switch prefix: %s", switch_pfx);
 
     char *switch_lib = opam_switch_lib(switch_name);
-    if (verbose)
+    if (verbosity > 0)
         log_info("switch site-lib: %s", switch_lib);
 
     chdir(launch_dir);
@@ -562,25 +453,42 @@ int main(int argc, char *argv[])
      */
     UT_string *coswitch_root;
     utstring_new(coswitch_root);
-    utstring_printf(coswitch_root,
-                    "%s/_opam",
-                    bws_dir);
-    int rc = access(utstring_body(coswitch_root), F_OK);
-    if (rc == 0) {
-        // found <>/_opam - local switch
-        coswitch_name = "local";
-        utstring_renew(coswitch_root);
-        utstring_printf(coswitch_root,
-                        "%s/.config/obazl",
-                        bws_dir);
-    } else {
+    if (options[OPT_SWITCH].count) {
+        // --switch arg overrides local switch
         coswitch_name = switch_name;
         utstring_renew(coswitch_root);
         utstring_printf(coswitch_root,
                         "%s/obazl",
                         xdg_data_home()); // ~/.local/share
+    } else {
+        // no --switch arg
+        utstring_printf(coswitch_root,
+                        "%s/_opam",
+                        bws_dir);
+        int rc = access(utstring_body(coswitch_root), F_OK);
+        if (rc == 0) {
+            // found <>/_opam - local switch
+            coswitch_name = "";
+            utstring_renew(coswitch_root);
+            utstring_printf(coswitch_root,
+                            "%s/.config/obazl",
+                            bws_dir);
+        } else {
+            coswitch_name = switch_name;
+            utstring_renew(coswitch_root);
+            utstring_printf(coswitch_root,
+                            "%s/obazl",
+                            xdg_data_home()); // ~/.local/share
+        }
     }
     /* log_debug("coswitch_root: %s", utstring_body(coswitch_root)); */
+
+    UT_string *coswitch_pfx;
+    utstring_new(coswitch_pfx);
+    utstring_printf(coswitch_pfx,
+                    "%s/opam/%s",
+                    utstring_body(coswitch_root),
+                    coswitch_name);
 
     UT_string *coswitch_lib;
     utstring_new(coswitch_lib);
@@ -589,7 +497,7 @@ int main(int argc, char *argv[])
                     utstring_body(coswitch_root),
                     coswitch_name);
 
-    UT_string *registry = _config_bzlmod_registry(coswitch_name,
+    UT_string *registry = config_bzlmod_registry(coswitch_name,
                                                   coswitch_root);
 
     utstring_new(meta_path);
@@ -610,6 +518,21 @@ int main(int argc, char *argv[])
         .coswitch_lib = coswitch_lib
         /* .pkgs = pkgs */
     };
+
+    if (!quiet) {
+        fprintf(stdout,
+                GRN "Switch name:   " CRESET
+                "%s\n", switch_name);
+        fprintf(stdout,
+                GRN "Switch prefix: " CRESET
+                "%s\n", switch_pfx);
+        fprintf(stdout,
+                GRN "Coswitch:      " CRESET
+                "%s\n", utstring_body(coswitch_pfx));
+        fprintf(stdout,
+                GRN "Registry:      " CRESET
+                "%s\n", utstring_body(registry));
+    }
 
     //FIXME: add extras arg to pass extra info to pkg_handler
     findlib_map(opam_include_pkgs,
@@ -670,9 +593,13 @@ int main(int argc, char *argv[])
                          switch_pfx,
                          utstring_body(coswitch_lib));
     free(switch_lib);
+    free(coswitch_root);
+    free(coswitch_pfx);
+    free(coswitch_lib);
+
     utstring_free(meta_path);
 
-    _write_registry_directive(utstring_body(registry));
+    write_registry_directive(utstring_body(registry));
     // , coswitch_name);
 
 #if defined(TRACING)

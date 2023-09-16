@@ -242,3 +242,111 @@ EXPORT void _emit_registry_record(UT_string *registry,
     utstring_free(bazel_file);
     TRACE_EXIT;
 }
+
+/* ************************************************ */
+UT_string *config_bzlmod_registry(char *switch_name,
+                                   UT_string *coswitch_root)
+{
+    TRACE_ENTRY;
+    UT_string *obazl_registry_home;
+    utstring_new(obazl_registry_home);
+    utstring_printf(obazl_registry_home,
+                    "%s/registry/%s",
+                    utstring_body(coswitch_root),
+                    switch_name);
+
+    mkdir_r(utstring_body(obazl_registry_home));
+
+    // write: bazel_registry.json
+    // also MODULE.bazel, WORKSPACE???
+
+    UT_string *module_base_path;
+    utstring_new(module_base_path);
+    utstring_printf(module_base_path,
+                    "%s/opam/%s/lib",
+                    utstring_body(coswitch_root),
+                    switch_name);
+    if (verbosity > 0)
+        log_info("module_base_path: %s",
+                 utstring_body(module_base_path));
+    // alternative: mbp = XDG/share/obazl/opam/<switch>
+    // or we could put coswitch stuff directly in the registry
+
+    char *bazel_registry_template = ""
+        "{\n"
+        "    \"mirrors\": [],\n"
+        "    \"module_base_path\": \"%s\"\n"
+        "}\n";
+
+    UT_string *bazel_registry_json;
+    utstring_new(bazel_registry_json);
+    utstring_printf(bazel_registry_json,
+                    bazel_registry_template,
+                    utstring_body(module_base_path));
+    utstring_free(module_base_path);
+
+    if (verbosity > 2)
+        log_info("bazel_registry_json:\n%s",
+                 utstring_body(bazel_registry_json));
+
+    UT_string *obazl_registry_json_file;
+    utstring_new(obazl_registry_json_file);
+    utstring_printf(obazl_registry_json_file,
+                    "%s/bazel_registry.json",
+                    utstring_body(obazl_registry_home));
+    if (verbosity > 2)
+        log_info("bazel_registry.json:\n%s",
+                 utstring_body(obazl_registry_json_file));
+    FILE *bazel_registry_json_fd
+        = fopen(utstring_body(obazl_registry_json_file), "w");
+    fprintf(bazel_registry_json_fd,
+            "%s", utstring_body(bazel_registry_json));
+    fclose (bazel_registry_json_fd);
+
+    mkdir_r(utstring_body(obazl_registry_home));
+    TRACE_EXIT;
+    return obazl_registry_home;
+}
+
+void write_registry_directive(char *registry)
+                               /* char *switch_name) */
+{
+    TRACE_ENTRY;
+
+    UT_string *content;
+    utstring_new(content);
+    utstring_printf(content,
+                    "common --registry=file://%s", // /%s",
+                    registry); //, switch_name);
+    /* log_debug("CONTENT: %s", utstring_body(content)); */
+
+    UT_string *fname;
+    utstring_new(fname);
+    char *wsd = getenv("BUILD_WORKSPACE_DIRECTORY");
+    utstring_printf(fname,
+                    "%s/.config",
+                    wsd);
+    mkdir_r(utstring_body(fname));
+    utstring_printf(fname, "/coswitch_registry.bazelrc");
+    /* log_debug("bazelrc: %s", utstring_body(fname)); */
+
+    FILE *ostream;
+    errno = 0;
+    ostream = fopen(utstring_body(fname), "w");
+    if (ostream == NULL) {
+        log_error("Fileopen %s error %s",
+                  utstring_body(fname),
+                  strerror(errno));
+        return;
+    }
+    fprintf(ostream, "%s", utstring_body(content));
+    fclose(ostream);
+
+    if (verbosity > log_writes)
+        fprintf(INFOFD, GRN "INFO" CRESET
+                " WROTE: %s\n", utstring_body(fname));
+
+    utstring_free(fname);
+    utstring_free(content);
+    TRACE_EXIT;
+}

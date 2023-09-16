@@ -11,8 +11,6 @@ PROD_REPOS = [
     "@semverc//src:semverc",
     "@uthash//src:uthash",
     "@xdgc//src:xdgc",
-
-    # "@runfiles//src:runfiles",
 ]
 
 repo_paths(

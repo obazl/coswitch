@@ -1,3 +1,6 @@
+.bazelignore
+.bazeliskrc
+.bazelversion
 .bazel
 bazel-*
 *.tgz
