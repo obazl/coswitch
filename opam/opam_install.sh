@@ -2,11 +2,11 @@
 
 #set -x
 
-echo "INSTALLER"
+# echo "INSTALLER"
 
 TGT=$1
 shift
-echo "TGT: $TGT"
+# echo "TGT: $TGT"
 
 ## cp .bazel/bin/src/makeheaders to $prefix/bin
 
@@ -29,13 +29,23 @@ source "${RUNFILES_DIR:-/dev/null}/$f" 2>/dev/null || \
 
 X="$(rlocation $TGT)"
 
+# BA="$(rlocation new/templates/ocaml_bigarray.BUILD)"
+# echo "BA: $BA"
+
 # echo "BIN: $X"
+T=`dirname $X`
+echo "LT: `ls $PWD/new`"
 
-# echo "PREFIX: $OPAM_SWITCH_PREFIX"
+mkdir -p $OPAM_SWITCH_PREFIX/share/obazl/templates
 
-# set -x
+CWD=$PWD
 
-mkdir -p $OPAM_SWITCH_PREFIX/lib/coswitch
-touch $OPAM_SWITCH_PREFIX/lib/coswitch/META
+cp -RL $CWD/new/templates/ $OPAM_SWITCH_PREFIX/share/obazl/templates
 
-install -v $X $OPAM_SWITCH_PREFIX/bin/coswitch
+# echo "CWD: $CWD"
+# echo "LS CWD: `ls $CWD`"
+
+# mkdir -p $OPAM_SWITCH_PREFIX/lib/coswitch
+# touch $OPAM_SWITCH_PREFIX/lib/coswitch/META
+
+install $X $OPAM_SWITCH_PREFIX/bin/coswitch

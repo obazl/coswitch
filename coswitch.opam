@@ -1,20 +1,37 @@
 opam-version: "2.0"
 name: "coswitch"
-version: "1.0.1"
-synopsis: "One-line description"
-maintainer: "Name <email>"
-authors: "Name <email>"
-license: "BSC"
+version: "1.0.0"
+synopsis: "Bazel-opam integration tool"
+maintainer: "Gregg Reynolds"
+authors: "Gregg Reynolds"
+license: "MIT"
 homepage: "https://github.com/obazl/coswitch"
-# bug-reports: "bar"
+doc: "https://github.com/obazl/coswitch"
+bug-reports: "https://github.com/obazl/coswitch/issues"
 # build-env: [
 #   [BAZELISK_BASE_URL = "https://github.com/bazelbuild/bazel/releases/download"]
 #   [USE_BAZEL_VERSION = "6.3.2"]
 # ]
-# build: [
-#   ["bazel" "--batch" "--output_base=.bazel_build" "--output_user_root=.bazel_user" "build" "--repository_cache=.bazel_repo_cache" "src:makeheaders" "--subcommands=pretty_print" "--verbose_failures"]
-# ]
+build: [
+  ["bazel"
+   "--bazelrc=.config/opam.bazelrc"
+   "--nosystem_rc"
+   "--nohome_rc"
+   "--noworkspace_rc"
+   "build" "new"
+  ]
+]
 install: [
-  ["bazel" "--batch" "--output_base=.bazel_build" "--output_user_root=.bazel_user" "run" "opam:install" "--repository_cache=.bazel_repo_cache" "--subcommands=pretty_print" "--verbose_failures" "--spawn_strategy=local"]
+  ["bazel"
+   "--bazelrc=.config/opam.bazelrc"
+   "--nosystem_rc"
+   "--nohome_rc"
+   "--noworkspace_rc"
+   "run" "opam:install"
+  ]
 ]
 
+url {
+  archive: "https://github.com/obazl/coswitch/archive/refs/heads/dev.zip"
+  # checksum: ""
+}

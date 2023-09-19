@@ -1,0 +1,16 @@
+startup --batch
+startup --output_base=.bazel_build
+startup --output_user_root=.bazel_user
+always --repository_cache=.bazel_repo_cache
+
+# always --spawn_strategy=local
+# always --symlink_prefix=.bazel/
+
+always --enable_bzlmod
+try-import .config/registries.bazelrc
+always --registry=https://raw.githubusercontent.com/obazl/registry/main/
+always --registry=https://bcr.bazel.build
+
+always --color=yes
+always --subcommands=true
+always --verbose_failures

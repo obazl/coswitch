@@ -479,7 +479,8 @@ int main(int argc, char *argv[])
         /* printf("The common portion is: '%.*s'\n", */
         /*        (int)length, switch_pfx); */
         if (length != strlen(switch_pfx)) {
-            log_error("Must be launched by opam; not designed to be launched by other methods");
+            fprintf(stderr, RED "ERROR: " CRESET
+                    "Must be launched by opam; not designed to be launched by other methods\n");
             exit(EXIT_FAILURE);
         }
     }
