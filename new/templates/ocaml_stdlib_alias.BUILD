@@ -1,7 +1,7 @@
 # generated file - DO NOT EDIT
 
 alias(
-    name   = "dynlink",
-    actual = "@ocaml//lib/dynlink",
+    name   = "stdlib",
+    actual = "@ocaml//lib/stdlib",
     visibility = ["//visibility:public"]
 )

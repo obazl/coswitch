@@ -1,7 +1,7 @@
 # generated file - DO NOT EDIT
 
 alias(
-    name   = "dynlink",
-    actual = "@ocaml//lib/dynlink",
+    name   = "runtime_events",
+    actual = "@ocaml//lib/runtime_events",
     visibility = ["//visibility:public"]
 )

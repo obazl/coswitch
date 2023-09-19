@@ -9,7 +9,7 @@
 
 EXPORT void copy_buildfile(char *src_file, UT_string *to_file)
 {
-    /* TRACE_ENTRY; */
+    TRACE_ENTRY;
     /* log_debug("copy_buildfile src: %s, dst: %s", */
     /*           src_file, utstring_body(to_file)); */
     UT_string *src;
@@ -18,7 +18,7 @@ EXPORT void copy_buildfile(char *src_file, UT_string *to_file)
     int rc = access(src_file, F_OK);
     if (rc != 0) {
         perror(utstring_body(src));
-        log_error("not found: %s", utstring_body(src));
+        log_error("not found: %s", src_file);
         /* fprintf(stderr, "not found: %s\n", utstring_body(src)); */
         exit(EXIT_FAILURE);
         return;

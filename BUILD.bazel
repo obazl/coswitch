@@ -4,6 +4,7 @@ PROD_REPOS = [
     "@libs7//src:s7",
     "@dune_s7//src:dune_s7",
 
+    "@cwalk//src:cwalk",
     "@gopt//src:gopt",
     "@findlibc//src:findlibc",
     "@liblogc//src:logc",

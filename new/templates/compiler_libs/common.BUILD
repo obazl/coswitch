@@ -1,5 +1,5 @@
 alias(
     name   = "common",
-    actual = "@ocaml//compiler-libs:common",
+    actual = "@ocaml//lib/compiler-libs:common",
     visibility = ["//visibility:public"]
 )

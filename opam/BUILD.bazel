@@ -1,0 +1,8 @@
+sh_binary(
+    name = "install",
+    srcs = ["opam_install.sh"],
+    args = ["$(rlocationpath //new)"],
+    data = ["//new"],
+    deps = ["@bazel_tools//tools/bash/runfiles"]
+)
+

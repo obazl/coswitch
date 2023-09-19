@@ -84,6 +84,8 @@ int symlink_ct;
 extern char *default_version;
 extern int   default_compat;
 
+bool distrib_pkg;
+
 void emit_new_local_subpkg_entries(FILE *bootstrap_FILE,
                                    struct obzl_meta_package *_pkg,
                                    char *_subdir,
@@ -1720,7 +1722,7 @@ bool emit_special_case_rule(FILE* ostream,
 
         fprintf(ostream, "alias(\n"
                 "    name = \"bigarray\",\n"
-                "    actual = \"@ocaml//bigarray\",\n"
+                "    actual = \"@ocaml//lib/bigarray\",\n"
                 "    visibility = [\"//visibility:public\"]\n"
                 ")\n");
         return true;
@@ -1734,7 +1736,7 @@ bool emit_special_case_rule(FILE* ostream,
 
         fprintf(ostream, "alias(\n"
                 "    name = \"dynlink\",\n"
-                "    actual = \"@ocaml//dynlink\",\n"
+                "    actual = \"@ocaml//lib/dynlink\",\n"
                 "    visibility = [\"//visibility:public\"]\n"
                 ")\n");
         return true;
@@ -1755,7 +1757,7 @@ bool emit_special_case_rule(FILE* ostream,
 
         fprintf(ostream, "alias(\n"
                 "    name = \"compiler-libs\",\n"
-                "    actual = \"@ocaml//compiler-libs/common\",\n"
+                "    actual = \"@ocaml//lib/compiler-libs/common\",\n"
                 "    visibility = [\"//visibility:public\"]\n"
                 ")\n");
         return true;
@@ -1791,7 +1793,7 @@ bool emit_special_case_rule(FILE* ostream,
 
     /*     fprintf(ostream, "alias(\n" */
     /*             "    name = \"bytecomp\",\n" */
-    /*             "    actual = \"@ocaml//compiler-libs/bytecomp\",\n" */
+    /*             "    actual = \"@ocaml//lib/compiler-libs/bytecomp\",\n" */
     /*             "    visibility = [\"//visibility:public\"]\n" */
     /*             ")\n"); */
     /*     return true; */
@@ -1809,7 +1811,7 @@ bool emit_special_case_rule(FILE* ostream,
 
         fprintf(ostream, "alias(\n"
                 "    name = \"num\",\n"
-                "    actual = \"@ocaml//num/core\",\n"
+                "    actual = \"@ocaml//lib/num/core\",\n"
                 "    visibility = [\"//visibility:public\"]\n"
                 ")\n");
         return true;
@@ -1823,7 +1825,7 @@ bool emit_special_case_rule(FILE* ostream,
 
         fprintf(ostream, "alias(\n"
                 "    name = \"ocamldoc\",\n"
-                "    actual = \"@ocaml//ocamldoc\",\n"
+                "    actual = \"@ocaml//lib/ocamldoc\",\n"
                 "    visibility = [\"//visibility:public\"]\n"
                 ")\n");
         return true;
@@ -1837,7 +1839,7 @@ bool emit_special_case_rule(FILE* ostream,
         /* fprintf(ostream, "xxxxxxxxxxxxxxxx"); */
         fprintf(ostream, "alias(\n"
                 "    name = \"str\",\n"
-                "    actual = \"@ocaml//str\",\n"
+                "    actual = \"@ocaml//lib/str\",\n"
                 "    visibility = [\"//visibility:public\"]\n"
                 ")\n");
         return true;
@@ -1851,7 +1853,7 @@ bool emit_special_case_rule(FILE* ostream,
 
         fprintf(ostream, "alias(\n"
                 "    name = \"threads\",\n"
-                "    actual = \"@ocaml//threads\",\n"
+                "    actual = \"@ocaml//lib/threads\",\n"
                 "    visibility = [\"//visibility:public\"]\n"
                 ")\n");
         return true;
@@ -1865,7 +1867,7 @@ bool emit_special_case_rule(FILE* ostream,
 
         fprintf(ostream, "alias(\n"
                 "    name = \"unix\",\n"
-                "    actual = \"@ocaml//unix\",\n"
+                "    actual = \"@ocaml//lib/unix\",\n"
                 "    visibility = [\"//visibility:public\"]\n"
                 ")\n");
         return true;
@@ -1881,12 +1883,12 @@ bool special_case_multiseg_dep(FILE* ostream,
 {
     if (delim1 == NULL) {
         if (strncmp(*dep_name, "compiler-libs", 13) == 0) {
-            fprintf(ostream, "%*s    \"@ocaml//compiler-libs/common\",\n",
+            fprintf(ostream, "%*s    \"@ocaml//lib/compiler-libs/common\",\n",
                     (1+level)*spfactor, sp);
             return true;
         } else {
             if (strncmp(*dep_name, "threads", 13) == 0) {
-                fprintf(ostream, "%*s    \"@ocaml//threads\",\n",
+                fprintf(ostream, "%*s    \"@ocaml//lib/threads\",\n",
                         (1+level)*spfactor, sp);
                 return true;
             }
@@ -1895,14 +1897,14 @@ bool special_case_multiseg_dep(FILE* ostream,
 
         if (strncmp(*dep_name, "compiler-libs/", 14) == 0) {
             fprintf(ostream,
-                    "%*s    \"@ocaml//compiler-libs/%s\",\n",
+                    "%*s    \"@ocaml//lib/compiler-libs/%s\",\n",
                     (1+level)*spfactor, sp, delim1+1);
             return true;
         }
 
         if (strncmp(*dep_name, "threads/", 8) == 0) {
             /* threads.posix, threads.vm => threads */
-            fprintf(ostream, "        \"@ocaml//threads\",\n");
+            fprintf(ostream, "        \"@ocaml//lib/threads\",\n");
             /* (1+level)*spfactor, sp, delim1+1); */
             return true;
         }
@@ -2079,29 +2081,31 @@ void emit_bazel_deps_attribute(FILE* ostream, int level,
                     else {
                         /* single-seg pkg, e.g. ptime  */
 
-                        // handle core libs: dynlink, str, unix, etc.
+                        // handle distrib-pkgs: dynlink, str, unix, etc.
                         /* FIXME: obsolete? */
                         if ((strncmp(dep_name, "bigarray", 8) == 0)
                             && strlen(dep_name) == 8) {
-                            fprintf(ostream, "%*s\"@ocaml//bigarray\",\n",
+                            fprintf(ostream, "%*s\"@ocaml//lib/bigarray\",\n",
                                     (1+level)*spfactor, sp);
                         } else {
                             if ((strncmp(dep_name, "unix", 4) == 0)
                                 && strlen(dep_name) == 4) {
-                                fprintf(ostream, "%*s\"@ocaml//unix\",\n",
+                                fprintf(ostream, "%*s\"@ocaml//lib/unix\",\n",
                                         (1+level)*spfactor, sp);
                             } else {
-                                //NOTE: we use @foo instead of @foo//:foo
-                                // seems to work
-                                /* fprintf(ostream, */
-                                /*         "%*s\"@%s\",\n", */
-                                /*         (1+level)*spfactor, sp, */
-                                /*         *dep_name); */
+                                /* WARNING: for distrib-pkgs, form @ocaml//lib/<pkg>,
+                                   not @<pkg>//lib/<pkg>
+                                 */
+                                if (strncmp("dynlink", dep_name, 7) == 0)
+                                    distrib_pkg = true;
+                                else
+                                    distrib_pkg = false;
                                 fprintf(ostream,
                                         "%*s\"@%s//lib/%s%s\",\n",
                                         /* "%*s\"@%s//:%s\",\n", */
                                         (1+level)*spfactor, sp,
-                                        dep_name, dep_name,
+                                        distrib_pkg? "ocaml" : dep_name,
+                                        dep_name,
                                         jsoo? ":js" : "");
                             }
                         }
@@ -3232,14 +3236,19 @@ EXPORT void emit_build_bazel(// char *ws_name,
         } else {
             if (strncmp(directory, "^", 1) == 0) {
 #if defined(TRACING)
-                log_debug("CCCC");
+                log_debug("STDLIB REDIRECT ^");
 #endif
-                /* Initial '^' means pkg within stdlib; "Only included
-                   because of findlib-browser" or "distributed with
-                   Ocaml". only applies to: raw-spacetime, num, threads,
-                   bigarray, unix, stdlib, str, dynlink, ocamldoc.
-                   in the opam repo these only have a META file,
-                   which redirects to files or subdirs in lib/ocaml
+                /* Initial '^' means pkg within stdlib, i.e.
+                   lib/ocaml; "Only included because of
+                   findlib-browser" or "distributed with Ocaml". only
+                   applies to: raw-spacetime, num, threads, bigarray,
+                   unix, stdlib, str, dynlink, ocamldoc.
+                   for <5.0.0, in the opam
+                   repo these only have a META file, which redirects
+                   to files or subdirs in lib/ocaml.
+                   for >=5.0.0, these have no toplevel dir w/META;
+                   instead they have a subdir w/META inside lib/ocaml,
+                   which does not use '^'
                 */
                 /* stdlib = true; */
                 directory++;
@@ -3343,14 +3352,26 @@ EXPORT void emit_build_bazel(// char *ws_name,
         exit(EXIT_FAILURE);
     }
 
+    /* SPECIAL CASE HANDLING
+
+       <5.0.0 : toplevel num, bigarray, unix, threads,
+       str, ocamldoc, dynlink
+
+       >=5.0.0 : num only?
+     */
     if ((_pkg_suffix == NULL)
         || ((strncmp(_pkg_suffix, "ocaml", 5) == 0) )) {
             /* && (strlen(_pkg_suffix) == 5))) */
         if (emit_special_case_rule(ostream, _pkg)) {
 #if defined(TRACING)
-            log_trace("emit_special_case_rule:TRUE %s", _pkg->name);
+            log_trace("+emit_special_case_rule:TRUE");
+            log_trace("\tpkg suffix: %s", _pkg_suffix);
+            log_trace("\tpkg name: %s", _pkg->name);
 #endif
             return;
+#if defined(TRACING)
+            log_trace("-emit_special_case_rule:FALSE %s", _pkg->name);
+#endif
         }
     }
 

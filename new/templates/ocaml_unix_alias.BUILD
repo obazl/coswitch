@@ -2,6 +2,6 @@
 
 alias(
     name   = "unix",
-    actual = "@ocaml//unix",
+    actual = "@ocaml//lib/unix",
     visibility = ["//visibility:public"]
 )

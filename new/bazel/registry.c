@@ -44,6 +44,9 @@ void _emit_reg_rec(UT_string *reg_file, char *pkg_name)
         fprintf(ostream,
                 "bazel_dep(name = \"stublibs\", version = \"%s\")\n",
                 default_version);
+    } else {
+        fprintf(ostream,
+                "bazel_dep(name = \"ocaml\", version = \"%s\")\n", "0.0.0");
     }
 
     fprintf(ostream, "\n");
@@ -92,6 +95,22 @@ EXPORT void emit_registry_record(UT_string *registry,
                               compiler_version,
                               pkg, pkgs,
                               "compiler-libs", "0.0.0");
+        _emit_registry_record(registry,
+                              compiler_version,
+                              pkg, pkgs,
+                              "dynlink", "0.0.0");
+        _emit_registry_record(registry,
+                              compiler_version,
+                              pkg, pkgs,
+                              "str", "0.0.0");
+        _emit_registry_record(registry,
+                              compiler_version,
+                              pkg, pkgs,
+                              "threads", "0.0.0");
+        _emit_registry_record(registry,
+                              compiler_version,
+                              pkg, pkgs,
+                              "unix", "0.0.0");
     }
     TRACE_EXIT;
 }
@@ -244,17 +263,30 @@ EXPORT void _emit_registry_record(UT_string *registry,
 }
 
 /* ************************************************ */
+/*
+  derives registry path, writes bazel_registry.json
+*/
 UT_string *config_bzlmod_registry(char *switch_name,
-                                   UT_string *coswitch_root)
+                                  UT_string *coswitch_root,
+                                  bool bazel_env)
 {
     TRACE_ENTRY;
     UT_string *obazl_registry_home;
     utstring_new(obazl_registry_home);
-    utstring_printf(obazl_registry_home,
-                    "%s/registry/%s",
-                    utstring_body(coswitch_root),
-                    switch_name);
-
+    if (bazel_env) {
+        //in-bazel:
+        //  shared: .local/share/obazl/registry
+        //  local:  .config/obazl/registry
+        utstring_printf(obazl_registry_home,
+                        "%s/registry/%s",
+                        utstring_body(coswitch_root),
+                        switch_name);
+    } else {
+        //in-opam:  <switch-pfx>/share/obazl
+        utstring_printf(obazl_registry_home,
+                        "%s",
+                        utstring_body(coswitch_root));
+    }
     mkdir_r(utstring_body(obazl_registry_home));
 
     // write: bazel_registry.json
@@ -262,15 +294,21 @@ UT_string *config_bzlmod_registry(char *switch_name,
 
     UT_string *module_base_path;
     utstring_new(module_base_path);
-    utstring_printf(module_base_path,
-                    "%s/opam/%s/lib",
-                    utstring_body(coswitch_root),
-                    switch_name);
+    if (bazel_env) {
+        //shared: .local/share/obazl/opam/<switch-name>/lib
+        //local:  .config/obazl/opam/lib
+        utstring_printf(module_base_path,
+                        "%s/opam/%s/lib",
+                        utstring_body(coswitch_root),
+                        switch_name);
+
+    } else {
+        //in-opam: relative path "lib"
+        utstring_printf(module_base_path, "lib");
+    }
     if (verbosity > 0)
         log_info("module_base_path: %s",
                  utstring_body(module_base_path));
-    // alternative: mbp = XDG/share/obazl/opam/<switch>
-    // or we could put coswitch stuff directly in the registry
 
     char *bazel_registry_template = ""
         "{\n"
@@ -297,13 +335,13 @@ UT_string *config_bzlmod_registry(char *switch_name,
     if (verbosity > 2)
         log_info("bazel_registry.json:\n%s",
                  utstring_body(obazl_registry_json_file));
+
     FILE *bazel_registry_json_fd
         = fopen(utstring_body(obazl_registry_json_file), "w");
     fprintf(bazel_registry_json_fd,
             "%s", utstring_body(bazel_registry_json));
     fclose (bazel_registry_json_fd);
 
-    mkdir_r(utstring_body(obazl_registry_home));
     TRACE_EXIT;
     return obazl_registry_home;
 }

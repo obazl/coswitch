@@ -194,7 +194,61 @@ Some examples:
 | `yojson` | `@yojson//lib/yojson`
 |===
 
-==== Special targets
+=== The `@ocaml` module
+
+Most (all?) OPAM packages contain one `META` file in their root
+directories. The standard compiler distributions are a little
+different. They contain a small number of "distrib-packages":
+
+* compiler-libs
+* dynlink
+* ocamldoc
+* runtime_events (>=5.0.0)
+* stdlib
+* str
+* threads
+* unix
+
+These are packages (so they can be listed as dependencies), but they
+are included in the compiler distributions rather than as
+free-standing OPAM/findlib packages.
+
+Special case: `num`. Implemented as a free-standing pkg, but installs
+its files to the standard lib dir (lib/ocaml).
+
+Prior to version `5.0.0` the distributions contained no `META` files
+for these packages within the `ocaml` package. Instead, the
+distrib-packages were expressed as OPAM top-level "virtual" packages
+with redirection to artifacts in `lib/ocaml`. They would be installed by OPAM when the compiler was installed.
+
+For example, the `dynlink` package for `4.14.0` is represented by
+`<opam-root>/4.14.0/lib/dynlink`, which contains only a `META` file
+indicating that the `dynlink` archive files are found in
+`<opam-root>/4.14.0/ocaml`
+
+Starting with `5.0.0` the distib-packages are expressed by eight
+nested `META` files:
+
+----
+lib/ocaml/compiler-libs/META
+lib/ocaml/dynlink/META
+lib/ocaml/ocamldoc/META
+lib/ocaml/runtime_events/META
+lib/ocaml/stdlib/META
+lib/ocaml/str/META
+lib/ocaml/threads/META
+lib/ocaml/unix/META
+----
+
+These packages are no longer represented by toplevel subdirectories
+within the switch' `lib` subdirectory.
+
+`@coswitch//new` creates a Bazel package for each of these as
+subpackages of the `@ocaml` module. For example,
+`@ocaml//lib/dynlink`. For compatibility it also creates a Bazel
+module for each; for example, `@dynlink//lib/dynlink`.  The build targets in these packages are aliased to those in the `@ocaml` module:
+
+    @dynlink//lib/dynlink => @ocaml//lib/dynlink
 
 `@coswitch//new` has special logic for translating the compiler
 distribution itself.

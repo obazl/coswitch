@@ -2,6 +2,6 @@
 
 alias(
     name   = "threads",
-    actual = "@ocaml//threads",
+    actual = "@ocaml//lib/threads",
     visibility = ["//visibility:public"]
 )

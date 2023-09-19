@@ -15,6 +15,7 @@ cc_binary(
         ":mkhdrs",
     ],
     deps = [
+        "@cwalk//src:cwalk",
         "@findlibc//src:findlibc",
         "@libs7//src:s7",
         "@opamc//src:opamc",
@@ -39,7 +40,7 @@ cc_binary(
         "-I$(GENDIR)/$(@)/src/opam",
         "-I$(GENDIR)/$(@)/test/opam",
 
-        "-I$(@libs7)/src",
+        "-I$(@cwalk)/include",
         "-I$(@gopt)/src",
         "-I$(@liblogc)/src",
         "-I$(@uthash)/src",

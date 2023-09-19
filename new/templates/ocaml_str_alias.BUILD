@@ -2,6 +2,6 @@
 
 alias(
     name   = "str",
-    actual = "@ocaml//str",
+    actual = "@ocaml//lib/str",
     visibility = ["//visibility:public"]
 )
