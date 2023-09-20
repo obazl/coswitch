@@ -330,7 +330,7 @@ void pkg_handler(char *site_lib, /* switch_lib */
                      /* opam_pending_deps, */
                      /* opam_completed_deps); */
 
-    // this will emit on BUILD.bazel file per pkg & subpkg
+    // this will emit one BUILD.bazel file per pkg & subpkg
     // and put them in <switch>/lib/<repo>/lib/<subpkg> dirs
     // e.g. <switch>/lib/ppxlib/lib/ast for ppxlib.ast
 
@@ -347,11 +347,11 @@ void pkg_handler(char *site_lib, /* switch_lib */
     //FIXME: read dunfile is choking on dune-package files,
     // which all contain
     //(sections (lib .) (libexec .) (doc ../../doc/<pkg>))
-    /* emit_pkg_bindir(site_lib, utstring_body(coswitch_lib), */
-    /*                 pkg->name); */
+    emit_pkg_bindir(site_lib, utstring_body(coswitch_lib),
+                    pkg->name);
 }
 
-/**
+/**********************************
    Method:
    1. Iterate over switch, converting META to BUILD.bazel
       and collecting toplevel packages in pkgs utarray
@@ -431,7 +431,10 @@ int main(int argc, char *argv[])
     /*                 getcwd(NULL, 0)); */
 
     /* s7_scheme *s7 = coswitch_s7_init(); */
+
+    /* for reading dune-project files */
     s7 = libs7_init();
+    libs7_load_plugin(s7, "dune");
 
     /* coswitch_s7_init2(NULL, // options[OPT_MAIN].argument, */
     /*              NULL); // options[OPT_WS].argument); */
@@ -477,8 +480,7 @@ int main(int argc, char *argv[])
             char *rp = realpath("external/"
                                 BAZEL_CURRENT_REPOSITORY,
                                 NULL);
-            log_debug("PWD: %s", getcwd(NULL,0));
-            log_debug("AAAAAAAAAAAAAAAA %s", rp);
+            /* log_debug("PWD: %s", getcwd(NULL,0)); */
             utstring_printf(runfiles_root, "%s/new", rp);
         }
     } else {
@@ -486,24 +488,24 @@ int main(int argc, char *argv[])
                         "%s/share/obazl",
                         switch_pfx);
     }
-    log_debug("RUNFILES_ROOT: %s", utstring_body(runfiles_root));
+    /* log_debug("RUNFILES_ROOT: %s", utstring_body(runfiles_root)); */
     chdir(bws_dir);
 
-    if (!bazel_env) {
-        // verify that we're running in opam context
-        // cwd should be subdir of <switch-prefix>?
-        char *cwd = getcwd(NULL, 0);
-        /* log_debug("CWD: %s", cwd); */
-        size_t length = cwk_path_get_intersection(cwd,
-                                                  switch_pfx);
-        /* printf("The common portion is: '%.*s'\n", */
-        /*        (int)length, switch_pfx); */
-        if (length != strlen(switch_pfx)) {
-            fprintf(stderr, RED "ERROR: " CRESET
-                    "Must be launched by opam; not designed to be launched by other methods\n");
-            exit(EXIT_FAILURE);
-        }
-    }
+    /* if (!bazel_env) { */
+    /*     // verify that we're running in opam context */
+    /*     // cwd should be subdir of <switch-prefix>? */
+    /*     char *cwd = getcwd(NULL, 0); */
+    /*     /\* log_debug("CWD: %s", cwd); *\/ */
+    /*     size_t length = cwk_path_get_intersection(cwd, */
+    /*                                               switch_pfx); */
+    /*     /\* printf("The common portion is: '%.*s'\n", *\/ */
+    /*     /\*        (int)length, switch_pfx); *\/ */
+    /*     if (length != strlen(switch_pfx)) { */
+    /*         fprintf(stderr, RED "ERROR: " CRESET */
+    /*                 "Must be launched by opam; not designed to be launched by other methods\n"); */
+    /*         exit(EXIT_FAILURE); */
+    /*     } */
+    /* } */
 
     char *switch_lib = opam_switch_lib(switch_name);
 
@@ -527,25 +529,25 @@ int main(int argc, char *argv[])
             utstring_printf(coswitch_root,
                             "%s/_opam",
                             bws_dir);
-            log_debug("CHECK FOR LOCAL: %s", utstring_body(coswitch_root));
+            /* log_debug("CHECK FOR LOCAL: %s", utstring_body(coswitch_root)); */
             int rc = access(utstring_body(coswitch_root), F_OK);
             if (rc == 0) {
                 // found ./_opam - local switch
-                log_debug("FOUND LOCAL");
+                /* log_debug("FOUND LOCAL"); */
                 coswitch_name = "";
                 utstring_renew(coswitch_root);
                 utstring_printf(coswitch_root,
                                 "%s/.config/obazl",
                                 bws_dir);
             } else {
-                log_debug("NOTFOUND LOCAL");
+                /* log_debug("NOTFOUND LOCAL"); */
                 coswitch_name = switch_name;
                 utstring_renew(coswitch_root);
                 utstring_printf(coswitch_root,
                                 "%s/obazl",
                                 xdg_data_home()); // ~/.local/share
-                log_debug("NOTFOUND LOCAL, coswitch root: %s",
-                          utstring_body(coswitch_root));
+                /* log_debug("NOTFOUND LOCAL, coswitch root: %s", */
+                /*           utstring_body(coswitch_root)); */
             }
         }
     } else {
