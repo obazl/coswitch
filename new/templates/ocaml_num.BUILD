@@ -7,7 +7,7 @@ ocaml_import(
     version    = "[distributed with OCaml]",
     sigs       = glob(["*.cmi"]),
     archive    =  select({
-        "@ocaml//platforms/target:vm?": "nums.cma",
+        "@ocaml//platform/executor:vm": "nums.cma",
         "//conditions:default":         "nums.cmxa",
     }),
     afiles     = glob(["*.a"]),
@@ -28,7 +28,7 @@ ocaml_import(
     name       = "plugin",
     version    = "[distributed with OCaml]",
     plugin     =  select({
-        "@ocaml//platforms/target:vm?": "nums.cma",
+        "@ocaml//platform/executor:vm": "nums.cma",
         "//conditions:default":         "nums.cmxs",
     }),
     # cmxs       = "nums.cmxs",

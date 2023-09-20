@@ -407,9 +407,7 @@ int main(int argc, char *argv[])
     }
 
     /* char *launch_dir = getcwd(NULL,0); */
-
     if (bazel_env) {
-        chdir(bws_dir);
         if (options[OPT_SWITCH].count) {
             switch_name = options[OPT_SWITCH].argument;
         } else {
@@ -469,6 +467,28 @@ int main(int argc, char *argv[])
 
     char *switch_pfx = opam_switch_prefix(switch_name);
 
+    UT_string *runfiles_root;
+    utstring_new(runfiles_root);
+    if (bazel_env) {
+        if (strlen(BAZEL_CURRENT_REPOSITORY) == 0) {
+            utstring_printf(runfiles_root, "%s",
+                            realpath("new", NULL));
+        } else {
+            char *rp = realpath("external/"
+                                BAZEL_CURRENT_REPOSITORY,
+                                NULL);
+            log_debug("PWD: %s", getcwd(NULL,0));
+            log_debug("AAAAAAAAAAAAAAAA %s", rp);
+            utstring_printf(runfiles_root, "%s/new", rp);
+        }
+    } else {
+        utstring_printf(runfiles_root,
+                        "%s/share/obazl",
+                        switch_pfx);
+    }
+    log_debug("RUNFILES_ROOT: %s", utstring_body(runfiles_root));
+    chdir(bws_dir);
+
     if (!bazel_env) {
         // verify that we're running in opam context
         // cwd should be subdir of <switch-prefix>?
@@ -518,6 +538,7 @@ int main(int argc, char *argv[])
                                 "%s/.config/obazl",
                                 bws_dir);
             } else {
+                log_debug("NOTFOUND LOCAL");
                 coswitch_name = switch_name;
                 utstring_renew(coswitch_root);
                 utstring_printf(coswitch_root,
@@ -662,7 +683,8 @@ int main(int argc, char *argv[])
                          paths.pkgs,
                          switch_name,
                          switch_pfx,
-                         utstring_body(coswitch_lib));
+                         utstring_body(coswitch_lib),
+                         utstring_body(runfiles_root));
     utstring_free(meta_path);
 
     if (bazel_env) {

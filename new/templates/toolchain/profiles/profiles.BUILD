@@ -81,7 +81,7 @@ ocaml_toolchain_profile(
 toolchain_profile_selector(
     name                    = "sys-dev",
     profile                 = ":sys_dev_profile",
-    target_host_constraints = ["@ocaml//platforms:sys?"],
+    target_host_constraints = ["@ocaml//platform/executor:sys"],
     constraints             = [":fastbuild_mode"],
 )
 
@@ -89,7 +89,7 @@ toolchain_profile_selector(
 toolchain_profile_selector(
     name                    = "sys-dbg",
     profile                 = ":sys_dbg_profile",
-    target_host_constraints = ["@ocaml//platforms:sys?"],
+    target_host_constraints = ["@ocaml//platform/executor:sys"],
     constraints             = [":dbg_mode"],
 )
 
@@ -97,7 +97,7 @@ toolchain_profile_selector(
 toolchain_profile_selector(
     name                    = "sys-opt",
     profile                 = ":sys_opt_profile",
-    target_host_constraints = ["@ocaml//platforms:sys?"],
+    target_host_constraints = ["@ocaml//platform/executor:sys"],
     constraints             = [":opt_mode"],
 )
 
@@ -105,7 +105,7 @@ toolchain_profile_selector(
 toolchain_profile_selector(
     name                    = "vm-dev",
     profile                 = ":vm_dev_profile",
-    target_host_constraints = ["@ocaml//platforms:vm?"],
+    target_host_constraints = ["@ocaml//platform/executor:vm"],
     constraints             = [":fastbuild_mode"],
 )
 
@@ -113,7 +113,7 @@ toolchain_profile_selector(
 toolchain_profile_selector(
     name                    = "vm-dbg",
     profile                 = ":vm_dbg_profile",
-    target_host_constraints = ["@ocaml//platforms:vm?"],
+    target_host_constraints = ["@ocaml//platform/executor:vm"],
     constraints             = [":dbg_mode"],
 )
 
@@ -121,7 +121,7 @@ toolchain_profile_selector(
 toolchain_profile_selector(
     name                    = "vm-opt",
     profile                 = ":vm_opt_profile",
-    target_host_constraints = ["@ocaml//platforms:vm?"],
+    target_host_constraints = ["@ocaml//platform/executor:vm"],
     constraints             = [":opt_mode"],
 )
 

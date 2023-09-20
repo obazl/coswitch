@@ -7,7 +7,7 @@ ocaml_import(
     version    = "[distributed with OCaml]",
     sigs       = glob(["*.cmi"]),
     archive    =  select({
-        "@ocaml//platforms/target:vm?": "odoc_info.cma",
+        "@ocaml//platform/executor:vm": "odoc_info.cma",
         "//conditions:default":         "odoc_info.cmxa",
     }),
     afiles     = glob(["*.a"]),

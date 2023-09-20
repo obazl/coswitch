@@ -8,7 +8,7 @@ ocaml_import(
     doc        = """Regular expressions and string processing""",
     sigs       = glob(["*.cmi"]),
     archive    =  select({
-        "@ocaml//platforms/target:vm?": "str.cma",
+        "@ocaml//platform/executor:vm": "str.cma",
         "//conditions:default":         "str.cmxa",
     }),
     afiles     = glob(["*.a"]),
@@ -28,7 +28,7 @@ ocaml_import(
 ocaml_import(
     name       = "plugin",
     plugin     =  select({
-        "@ocaml//platforms/target:vm?": "str.cma",
+        "@ocaml//platform/executor:vm": "str.cma",
         "//conditions:default":         "str.cmxs",
     }),
     # cmxs       = "str.cmxs",

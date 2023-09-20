@@ -8,7 +8,7 @@ COMPILER_VERSION = "0.0.0"
 
 ########################
 ocaml_toolchain_adapter(
-    name                   = "syssys",
+    name                   = "ocamlopt.opt",
     host                   = "sys",
     target                 = "sys",
     repl                   = "@ocaml//bin:ocaml",
@@ -38,7 +38,7 @@ ocaml_toolchain_adapter(
 
 ########################
 ocaml_toolchain_adapter(
-    name                   = "sysvm",
+    name                   = "ocamlc.opt",
     host                   = "sys",
     target                 = "vm",
     repl                   = "@ocaml//bin:ocaml",
@@ -56,7 +56,7 @@ ocaml_toolchain_adapter(
 
 ########################
 ocaml_toolchain_adapter(
-    name                   = "vmvm",
+    name                   = "ocamlc.byte",
     host                   = "vm",
     target                 = "vm",
     repl                   = "@ocaml//bin:ocaml",
@@ -74,7 +74,7 @@ ocaml_toolchain_adapter(
 
 ########################
 ocaml_toolchain_adapter(
-    name                   = "vmsys",
+    name                   = "ocamlopt.byte",
     host                   = "vm",
     target                 = "sys",
     repl                   = "@ocaml//bin:ocaml",

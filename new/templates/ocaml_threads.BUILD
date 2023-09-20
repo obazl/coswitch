@@ -7,7 +7,7 @@ ocaml_import(
     version    = "[distributed with OCaml]",
     sigs       = glob(["*.cmi"]),
     archive    =  select({
-        "@ocaml//platforms/target:vm?": "threads.cma",
+        "@ocaml//platform/executor:vm": "threads.cma",
         "//conditions:default":         "threads.cmxa",
     }),
     afiles     = glob(["*.a"]),
@@ -21,6 +21,6 @@ ocaml_import(
     cmtis      = glob(["*.cmti"]),
     srcs       = glob(["*.ml", "*.mli"]),
     all        = glob(["*.cm*", "*.o", "*.a"]),
-    deps       = ["@ocaml//unix"],
+    deps       = ["@ocaml//lib/unix"],
     visibility = ["//visibility:public"],
 );

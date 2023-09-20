@@ -7,7 +7,7 @@ ocaml_import(
     doc        = """Common compiler routines""",
     sigs       = glob(["*.cmi"]),
     archive    =  select({
-        "@ocaml//platforms/target:vm?": "ocamlcommon.cma",
+        "@ocaml//platform/executor:vm": "ocamlcommon.cma",
         "//conditions:default":         "ocamlcommon.cmxa",
     }),
     afiles     = glob(["*.a"]),
@@ -29,7 +29,7 @@ ocaml_import(
     doc        = """Common compiler routines""",
     sigs       = glob(["*.cmi"]),
     archive    =  select({
-        "@ocaml//platforms/target:vm?": "ocamlbytecomp.cma",
+        "@ocaml//platform/executor:vm": "ocamlbytecomp.cma",
         "//conditions:default":         "ocamlbytecomp.cmxa",
     }),
     afiles     = glob(["*.a"]),
@@ -52,7 +52,7 @@ ocaml_import(
     doc        = """optcomp compiler routines""",
     sigs       = glob(["*.cmi"]),
     archive    =  select({
-        "@ocaml//platforms/target:vm?": "ocamloptcomp.cma",
+        "@ocaml//platform/executor:vm": "ocamloptcomp.cma",
         "//conditions:default":         "ocamloptcomp.cmxa",
     }),
     afiles     = glob(["*.a"]),
@@ -75,7 +75,7 @@ ocaml_import(
     doc = """Toplevel interactions""",
     sigs       = glob(["*.cmi"]),
     archive    =  select({
-        "@ocaml//platforms/target:vm?": "ocamltoplevel.cma",
+        "@ocaml//platform/executor:vm": "ocamltoplevel.cma",
         "//conditions:default":         "ocamltoplevel.cmxa",
     }),
     afiles     = glob(["*.a"]),

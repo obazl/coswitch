@@ -6,51 +6,51 @@ exports_files(glob(["*.bazel"]))
 
 ##########
 toolchain_selector(
-    name           = "__", # *>*
-    toolchain      = "@ocaml//toolchain/adapters/local:syssys",
+    name           = "ocamlopt.opt",
+    toolchain      = "@ocaml//toolchain/adapters/local:ocamlopt.opt",
+    build_host_constraints  = ["@ocaml//platform/executor:sys"],
+    target_host_constraints  = ["@ocaml//platform/executor:sys"],
     visibility     = ["//visibility:public"],
 )
 
 ##########
 toolchain_selector(
-    name           = "_vm", # *>vm
-    toolchain      = "@ocaml//toolchain/adapters/local:sysvm",
-    target_host_constraints  = ["@ocaml//platforms/target:vm?"],
-    visibility     = ["//visibility:public"],
-)
-
-##########
-toolchain_selector(
-    name           = "syssys",
-    toolchain      = "@ocaml//toolchain/adapters/local:syssys",
-    build_host_constraints  = ["@ocaml//platforms/build:sys?"],
-    target_host_constraints  = ["@ocaml//platforms/target:sys?"],
-    visibility     = ["//visibility:public"],
-)
-
-##########
-toolchain_selector(
-    name                    = "sysvm",
-    toolchain               = "@ocaml//toolchain/adapters/local:sysvm",
-    build_host_constraints  = ["@ocaml//platforms/build:sys?"],
-    target_host_constraints  = ["@ocaml//platforms/target:vm?"],
+    name                    = "ocamlc.opt",
+    toolchain               = "@ocaml//toolchain/adapters/local:ocamlc.opt",
+    build_host_constraints  = ["@ocaml//platform/executor:sys"],
+    target_host_constraints  = ["@ocaml//platform/executor:vm"],
     visibility              = ["//visibility:public"],
 )
 
 ##########
 toolchain_selector(
-    name                    = "vmsys",
-    toolchain               = "@ocaml//toolchain/adapters/local:vmsys",
-    build_host_constraints    = ["@ocaml//platforms/build:vm?"],
-    target_host_constraints  = ["@ocaml//platforms/target:sys?"],
+    name                    = "ocamlopt.byte",
+    toolchain               = "@ocaml//toolchain/adapters/local:ocamlopt.byte",
+    build_host_constraints    = ["@ocaml//platform/executor:vm"],
+    target_host_constraints  = ["@ocaml//platform/executor:sys"],
     visibility              = ["//visibility:public"],
 )
 
 ##########
 toolchain_selector(
-    name                    = "vmvm",
-    toolchain               = "@ocaml//toolchain/adapters/local:vmvm",
-    build_host_constraints  = ["@ocaml//platforms/build:vm?"],
-    target_host_constraints  = ["@ocaml//platforms/target:vm?"],
+    name                    = "ocamlc.byte",
+    toolchain               = "@ocaml//toolchain/adapters/local:ocamlc.byte",
+    build_host_constraints  = ["@ocaml//platform/executor:vm"],
+    target_host_constraints  = ["@ocaml//platform/executor:vm"],
     visibility              = ["//visibility:public"],
 )
+
+# ##########
+# toolchain_selector(
+#     name           = "_vm", # *>vm
+#     toolchain      = "@ocaml//toolchain/adapters/local:ocamlc.opt",
+#     target_host_constraints  = ["@ocaml//platform/executor:vm"],
+#     visibility     = ["//visibility:public"],
+# )
+
+# ##########
+# toolchain_selector(
+#     name           = "__", # *>*
+#     toolchain      = "@ocaml//toolchain/adapters/local:ocamlopt.opt",
+#     visibility     = ["//visibility:public"],
+# )

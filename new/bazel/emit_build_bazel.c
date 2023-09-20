@@ -1054,7 +1054,10 @@ void emit_bazel_archive_attr(FILE* ostream,
         }
         if (settings_ct > 1) {
             if (strncmp(utstring_body(cmtag), "cma", 4) == 0)
-                fprintf(ostream, "%*s\"%s\":", level*spfactor + 4, sp, "@ocaml//platforms/target:vm?");
+                fprintf(ostream, "%*s\"%s\":",
+                        level*spfactor + 4, sp,
+                        "@ocaml//platform/executor:vm");
+                        /* "@ocaml//platform/executor:vm"); */
             else
                 fprintf(ostream, "%*s\"%s\":    ", level*spfactor + 4, sp, "//conditions:default");
 
@@ -1558,7 +1561,7 @@ Note that "archive" should only be used for archive files that are intended to b
                             _pkg);
 
     /* fprintf(ostream, "    astructs    = select({\n" */
-    /*         "        \"@ocaml//platforms/target:vm?\": glob([\"*.cmo\"]),\n" */
+    /*         "        \"@ocaml//platform/executor:vm\": glob([\"*.cmo\"]),\n" */
     /*         "        \"//conditions:default\": glob([\"*.cmx\"])\n" */
     /*         "    }),\n"), */
 

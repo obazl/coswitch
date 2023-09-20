@@ -73,9 +73,10 @@ cc_library(
         "//new/templates:ocaml_str.BUILD",
         "//new/templates:ocaml_str_alias.BUILD",
 
-        "//new/templates/platforms:BUILD.bazel",
-        "//new/templates/platforms/build:BUILD.bazel",
-        "//new/templates/platforms/target:BUILD.bazel",
+        "//new/templates/platform:BUILD.bazel",
+        "//new/templates/platform/build:BUILD.bazel",
+        "//new/templates/platform/executor:BUILD.bazel",
+        "//new/templates/platform/target:BUILD.bazel",
 
         "//new/templates:toolchain/adapters/local.BUILD",
         "//new/templates:toolchain/adapters/local.BUILD.mustache",

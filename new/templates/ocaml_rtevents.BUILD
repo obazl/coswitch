@@ -8,7 +8,7 @@ ocaml_import(
     doc        = """Runtime events""",
     sigs       = glob(["*.cmi"]),
     archive    =  select({
-        "@ocaml//platforms/target:vm?": "runtime_events.cma",
+        "@ocaml//platform/executor:vm": "runtime_events.cma",
         "//conditions:default":         "runtime_events.cmxa",
     }),
     afiles     = glob(["*.a"]),
@@ -28,7 +28,7 @@ ocaml_import(
 ocaml_import(
     name       = "plugin",
     plugin     =  select({
-        "@ocaml//platforms/target:vm?": "runtime_events.cma",
+        "@ocaml//platform/executor:vm": "runtime_events.cma",
         "//conditions:default":         "runtime_events.cmxs",
     }),
     # cmxs       = "runtime_events.cmxs",

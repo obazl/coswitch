@@ -7,7 +7,7 @@ ocaml_import(
     version    = "[distributed with OCaml]",
     sigs       = glob(["*.cmi"]),
     archive    =  select({
-        "@ocaml//platforms/target:vm?": "bigarray.cma",
+        "@ocaml//platform/executor:vm": "bigarray.cma",
         "//conditions:default":         "bigarray.cmxa",
     }),
     afiles     = glob(["*.a"]),
@@ -26,7 +26,7 @@ ocaml_import(
     name       = "plugin",
     version    = "[distributed with OCaml]",
     plugin     =  select({
-        "@ocaml//platforms/target:vm?": "bigarray.cma",
+        "@ocaml//platform/executor:vm": "bigarray.cma",
         "//conditions:default":         "bigarray.cmxs",
     }),
     # cmxs       = "bigarray.cmxs",
