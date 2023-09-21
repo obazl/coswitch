@@ -4,8 +4,6 @@ exports_files(["BUILD.bazel"])
 
 load("@rules_ocaml//toolchain:BUILD.bzl", "ocaml_toolchain_adapter")
 
-COMPILER_VERSION = "{{compiler_version}}"
-
 ########################
 ocaml_toolchain_adapter(
     name                   = "syssys",

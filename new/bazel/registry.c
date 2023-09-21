@@ -6,7 +6,8 @@
 
 #include "registry.h"
 
-const char *platforms_version = "0.0.7";
+const char *platforms_version   = "0.0.7";
+const char *skylib_version      = "1.4.2";
 const char *rules_ocaml_version = "1.0.0";
 
 void _emit_reg_rec(UT_string *reg_file, char *pkg_name)
@@ -33,11 +34,15 @@ void _emit_reg_rec(UT_string *reg_file, char *pkg_name)
             );
     fprintf(ostream, "    compatibility_level = %d,\n",
             default_compat);
+    fprintf(ostream, "    bazel_compatibility = [\">=%s\"]\n",
+            bazel_compat);
     fprintf(ostream, ")\n");
     fprintf(ostream, "\n");
     if (strncmp("ocaml", pkg_name, 6) == 0) {
         fprintf(ostream,
                 "bazel_dep(name = \"platforms\", version = \"%s\")\n", platforms_version);
+        fprintf(ostream,
+                "bazel_dep(name = \"bazel_skylib\", version = \"%s\")\n", skylib_version);
         fprintf(ostream,
                 "bazel_dep(name = \"rules_ocaml\", version = \"%s\")\n", rules_ocaml_version);
 

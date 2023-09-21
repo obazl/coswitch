@@ -83,6 +83,7 @@ int symlink_ct;
 
 extern char *default_version;
 extern int   default_compat;
+extern char *bazel_compat;
 
 bool distrib_pkg;
 
@@ -1016,8 +1017,9 @@ void emit_bazel_archive_attr(FILE* ostream,
     obzl_meta_value *archive_name = NULL;
 
     /* lhs */
-    fprintf(ostream, "%*s%s =  select({\n",
-            level*spfactor, sp, property);
+    fprintf(ostream, "    archive  =  select({\n");
+            //level*spfactor, sp,
+            /* property); */
 
     /* iter over archive(byte), archive(native) */
     for (int i = 0; i < settings_ct; i++) {
@@ -1054,12 +1056,18 @@ void emit_bazel_archive_attr(FILE* ostream,
         }
         if (settings_ct > 1) {
             if (strncmp(utstring_body(cmtag), "cma", 4) == 0)
-                fprintf(ostream, "%*s\"%s\":",
-                        level*spfactor + 4, sp,
-                        "@ocaml//platform/executor:vm");
-                        /* "@ocaml//platform/executor:vm"); */
+                fprintf(ostream,
+                        "        "
+                        "\"@ocaml//platform/emitter:vm\" :");
+                        /* level*spfactor + 4, sp, */
+                        /* "@ocaml//platform/emitter:vm"); */
             else
-                fprintf(ostream, "%*s\"%s\":    ", level*spfactor + 4, sp, "//conditions:default");
+                fprintf(ostream,
+                        "        "
+                        "\"@ocaml//platform/emitter:sys\":");
+                        /* "\"//conditions:default\":        "); */
+                        /* level*spfactor + 4, sp, */
+                        /* "//conditions:default"); */
 
             /* fprintf(ostream, "%*s%s", level*spfactor, sp, "archive"); */
             /* fprintf(ostream, "%*s%s", level*spfactor, sp, */
@@ -1143,7 +1151,8 @@ void emit_bazel_archive_attr(FILE* ostream,
     next:
         ;
     }
-    fprintf(ostream, "    }),\n");
+    fprintf(ostream,
+            "    }, no_match_error=\"Bad platform\"),\n");
 }
 
 void emit_bazel_cmxs_attr(FILE* ostream,
@@ -1561,21 +1570,38 @@ Note that "archive" should only be used for archive files that are intended to b
                             _pkg);
 
     /* fprintf(ostream, "    astructs    = select({\n" */
-    /*         "        \"@ocaml//platform/executor:vm\": glob([\"*.cmo\"]),\n" */
+    /*         "        \"@ocaml//platform/emitter:vm\": glob([\"*.cmo\"]),\n" */
     /*         "        \"//conditions:default\": glob([\"*.cmx\"])\n" */
     /*         "    }),\n"), */
 
 
     /* FIXME: only .a stem matching archive stem  */
-    fprintf(ostream, "    afiles   = glob([\"*.a\"], exclude=[\"*_stubs.a\"]),\n");
+    fprintf(ostream,
+            "    afiles   = select({\n"
+            "        \"@ocaml//platform/emitter:vm\" : [],\n"
+            "        \"@ocaml//platform/emitter:sys\": "
+            "glob([\"*.a\"],\n"
+            "                                         exclude=[\"*_stubs.a\"])\n"
+            "    }, no_match_error=\"Bad platform\"),\n");
 
     /* FIXME: 'structs', not 'astructs' -  bazel rule decides what to do */
-    fprintf(ostream, "    astructs = glob([\"*.cmx\"]),\n");
+    //fprintf(ostream, "    astructs = glob([\"*.cmx\"]),\n");
+    fprintf(ostream,
+            "    astructs = select({\n"
+            "        \"@ocaml//platform/emitter:vm\" : [],\n"
+            "        \"@ocaml//platform/emitter:sys\": "
+            "glob([\"*.cmx\"])\n"
+            "    }, no_match_error=\"Bad platform\"),\n");
 
-    /* fprintf(ostream, "    cmo      = glob([\"*.cmo\"]),\n"); */
-    /* fprintf(ostream, "    cmx      = glob([\"*.cmx\"]),\n"); */
     /* FIXME: ofiles are never present? */
-    fprintf(ostream, "    ofiles   = glob([\"*.o\"]),\n");
+    //fprintf(ostream, "    ofiles   = glob([\"*.o\"]),\n");
+    fprintf(ostream,
+            "    ofiles   = select({\n"
+            "        \"@ocaml//platform/emitter:vm\" : [],\n"
+            "        \"@ocaml//platform/emitter:sys\": "
+            "glob([\"*.o\"])\n"
+            "    }, no_match_error=\"Bad platform\"),\n");
+
     fprintf(ostream, "    cmts     = glob([\"*.cmt\"]),\n");
     fprintf(ostream, "    cmtis    = glob([\"*.cmti\"]),\n");
     fprintf(ostream, "    vmlibs   = glob([\"dll*.so\"]),\n");
@@ -2898,6 +2924,8 @@ EXPORT void emit_module_file(UT_string *module_file,
             default_version, version);
     fprintf(ostream, "    compatibility_level = %d, # %d\n",
             default_compat, semv->major);
+    fprintf(ostream, "    bazel_compatibility = [\">=%s\"]\n",
+            bazel_compat);
     fprintf(ostream, ")\n");
     fprintf(ostream, "\n");
 

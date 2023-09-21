@@ -62,6 +62,7 @@ struct paths_s {
 
 char *default_version = "0.0.0";
 int   default_compat  = 0;
+char *bazel_compat    = "6.0.0";
 
 bool quiet;
 bool verbose;

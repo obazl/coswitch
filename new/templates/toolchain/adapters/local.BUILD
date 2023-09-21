@@ -4,8 +4,6 @@ exports_files(["BUILD.bazel"])
 
 load("@rules_ocaml//toolchain:BUILD.bzl", "ocaml_toolchain_adapter")
 
-COMPILER_VERSION = "0.0.0"
-
 ########################
 ocaml_toolchain_adapter(
     name                   = "ocamlopt.opt",
@@ -13,7 +11,7 @@ ocaml_toolchain_adapter(
     target                 = "sys",
     repl                   = "@ocaml//bin:ocaml",
     compiler               = "@ocaml//bin:ocamlopt.opt",
-    version                = COMPILER_VERSION,
+    version                = "@ocaml//version",
     profiling_compiler     = "@ocaml//bin:ocamloptp",
     ocamllex               = "@ocaml//bin:ocamllex.opt",
     ocamlyacc              = "@ocaml//bin:ocamlyacc",
@@ -43,7 +41,7 @@ ocaml_toolchain_adapter(
     target                 = "vm",
     repl                   = "@ocaml//bin:ocaml",
     compiler               = "@ocaml//bin:ocamlc.opt",
-    version                = COMPILER_VERSION,
+    version                = "@ocaml//version",
     profiling_compiler     = "@ocaml//bin:ocamlcp",
     ocamllex               = "@ocaml//bin:ocamllex.opt",
     ocamlyacc              = "@ocaml//bin:ocamlyacc",
@@ -61,7 +59,7 @@ ocaml_toolchain_adapter(
     target                 = "vm",
     repl                   = "@ocaml//bin:ocaml",
     compiler               = "@ocaml//bin:ocamlc.byte",
-    version                = COMPILER_VERSION,
+    version                = "@ocaml//version",
     profiling_compiler     = "@ocaml//bin:ocamlcp",
     ocamllex               = "@ocaml//bin:ocamllex.byte",
     ocamlyacc              = "@ocaml//bin:ocamlyacc",
@@ -79,7 +77,7 @@ ocaml_toolchain_adapter(
     target                 = "sys",
     repl                   = "@ocaml//bin:ocaml",
     compiler               = "@ocaml//bin:ocamlopt.byte",
-    version                = COMPILER_VERSION,
+    version                = "@ocaml//version",
     profiling_compiler     = "@ocaml//bin:ocamloptp",
     ocamllex               = "@ocaml//bin:ocamllex.byte",
     ocamlyacc              = "@ocaml//bin:ocamlyacc",
