@@ -78,11 +78,6 @@ cc_library(
         "//new/templates/platform:executor.BUILD",
         "//new/templates/platform:emitter.BUILD",
 
-        # "//new/templates/platform:BUILD.bazel",
-        # "//new/templates/platform/build:BUILD.bazel",
-        # "//new/templates/platform/executor:BUILD.bazel",
-        # "//new/templates/platform/target:BUILD.bazel",
-
         "//new/templates:toolchain/adapters/local.BUILD",
         "//new/templates:toolchain/adapters/local.BUILD.mustache",
         "//new/templates:toolchain/adapters/linux/x86_64.BUILD",

@@ -77,6 +77,23 @@ toolchain_selector(
 ## These are exo-endo-compilers, so to speak.
 ## These will be selected for toolchain transition
 ## where buildhost is an exocompiler, no matter the targethost
+
+## codeps need cmxa archives for ocamlopt.byte,
+## so we cheat, and build tools for the target,
+## not the build host
+## iow, according to bazel's tc transitions, the target
+## here should be the build host, which has executor vm
+## but ocaml_imports select on the emitter, not the executor,
+## and the tc transition sets emitter to sys,
+## so linking would fail if we used a vm emitter (e.g. ocamlc.opt)
+
+## IOW we do the opposite of what bazel wants. We need
+## to do this to accomodate codeps, which must *not*
+## be built for the buildhost env, but for the target.
+## NB: cfg = "target" on ppx_executable does not help,
+## since the tc transition has already been made by the
+## time the ppx_executable is evaluated, so the target
+## will be same as build host due to tc transition.
 toolchain_selector(
     name                    = "ocamlopt.byte.endo",
     toolchain               = "@ocaml//toolchain/adapters/local:ocamlopt.byte",
@@ -98,6 +115,11 @@ toolchain_selector(
 )
 
 ###################
+## in this case, build executor is sys so that's the (tool)
+## target executor, so according to bazel we should
+## use a sys emitter on the build host.
+## but ocaml_import selects on the emitter here, vm
+## so linking tools would fail if we used ocamlopt.opt
 toolchain_selector(
     name      = "ocamlc.opt.endo",
     toolchain = "@ocaml//toolchain/adapters/local:ocamlc.opt",
