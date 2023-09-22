@@ -257,21 +257,25 @@ distribution itself.
 |===
 | Bazel pkg | Imports (by symlinks to <switch-prefix>)
 | `@ocaml//bin` |  `bin`
-| `@ocaml//c:sdk` | headers and selected runtime (e.g. `lib/libasmrun.a`)
-| `@ocaml//c/caml` | `lib/ocaml/caml`
-| `@ocaml//c/lib` | `lib/ocaml`
-| `@ocaml//compiler-libs` | `lib/ocaml/compiler-libs`
-| `@ocaml//compiler-libs:bytecomp` |  `lib/ocaml/compiler-libs/ocamlbytecomp.cmx[a]`
-| `@ocaml//compiler-libs/bytecomp` |  alias to `@ocaml//compiler-libs:bytecomp`
-| `@ocaml//dynlink` | `lib/ocaml/dynlink`
-| `@ocaml//ocamldoc` | `lib/ocaml/ocamldoc`
-| `@ocaml//platforms` | OBazl-specific helper pkg
-| `@ocaml//runtime` | `lib/ocaml` - stdlib, std_exit etc.
-| `@ocaml//str` | `lib/ocaml`
-| `@ocaml//stublibs` | `lib/ocaml`
-| `@ocaml//threads` | `lib/ocaml/threads/threads.cmx[a]`
+| `@ocaml//lib/c:sdk` | headers and selected runtime (e.g. `lib/libasmrun.a`)
+| `@ocaml//lib/c/caml` | `lib/ocaml/caml`
+| `@ocaml//lib/c/lib` | `lib/ocaml`
+| `@ocaml//lib/compiler-libs` | `lib/ocaml/compiler-libs`
+| `@ocaml//lib/compiler-libs:bytecomp` |  `lib/ocaml/compiler-libs/ocamlbytecomp.cmx[a]`
+| `@ocaml//lib/compiler-libs:common` |  alias to `@ocaml//lib/compiler-libs:common`
+| `@ocaml//lib/compiler-libs:optcomp` |  alias to `@ocaml//lib/compiler-libs:optcomp`
+| `@ocaml//lib/compiler-libs:toplevel` |  alias to `@ocaml//lib/compiler-libs:toplevel`
+| `@ocaml//lib/dynlink` | `lib/ocaml/dynlink`
+| `@ocaml//lib/ocamldoc` | `lib/ocaml/ocamldoc`
+| `@ocaml//lib/runtime` | `lib/ocaml` - stdlib, std_exit etc.
+| `@ocaml//lib/str` | `lib/ocaml`
+| `@ocaml//lib/stublibs` | `lib/ocaml`
+| `@ocaml//lib/threads` | `lib/ocaml/threads/threads.cmx[a]`
+| `@ocaml// unix` | `lib/ocaml`
+| |
+| `@ocaml//platform` | OBazl-specific helper pkg
 | `@ocaml//toolchain` | OBazl-specific helper pkg
-| `@ocaml//unix` | `lib/ocaml`
+| `@ocaml//version` | OBazl-specific helper pkg
 |====
 
 === Registry selection
