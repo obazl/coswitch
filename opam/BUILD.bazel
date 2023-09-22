@@ -7,6 +7,7 @@ sh_binary(
         "//new",
         # WARNING: keep in sync with //new/bazel/BUILD.bazel
         "//new/templates/ocaml:ocaml_bigarray.BUILD",
+        "//new/templates/ocaml:ocaml_bigarray_alias.BUILD",
         "//new/templates/ocaml:ocaml_c_api.BUILD",
         "//new/templates/ocaml:ocaml_compiler-libs.BUILD",
         "//new/templates/ocaml/compiler_libs:bytecomp.BUILD",

@@ -972,6 +972,7 @@ void emit_bazel_archive_attr(FILE* ostream,
                              char *property, /* always 'archive' */
                              obzl_meta_package *_pkg)
 {
+    (void)level;
     (void)_pkg;
     (void)_pkg_name;
     (void)_filedeps_path;
@@ -1730,12 +1731,14 @@ void emit_bazel_plugin_rule(FILE* ostream, int level,
   num is a special case. was part of core distrib, now it's a pkg
 
   we emit an alias to redirect from standalone to @ocaml
-  e.g. @bigarray//bigarry => @ocaml//bigarray
+  e.g. @bigarray//bigarray => @ocaml//lib/bigarray
 
   this is an OPAM legacy thing in case people depend on these pkgs. we
   don't really need to do this since legacy-to-obazl conversion should
   map legacy pkg names correctly. But we do it anyway just in case.
  */
+
+/* FIXME: copy templates instead? */
 bool emit_special_case_rule(FILE* ostream,
                             obzl_meta_package *_pkg)
 {
@@ -1745,6 +1748,7 @@ bool emit_special_case_rule(FILE* ostream,
 
     if ((strncmp(_pkg->name, "bigarray", 8) == 0)
         && strlen(_pkg->name) == 8) {
+
 #if defined(TRACING)
         log_trace("emit_special_case_rule: bigarrray");
 #endif
@@ -1763,6 +1767,7 @@ bool emit_special_case_rule(FILE* ostream,
         log_trace("emit_special_case_rule: dynlink");
 #endif
 
+        fprintf(ostream, "## special case: dynlink");
         fprintf(ostream, "alias(\n"
                 "    name = \"dynlink\",\n"
                 "    actual = \"@ocaml//lib/dynlink\",\n"

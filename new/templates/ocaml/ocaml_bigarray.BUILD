@@ -23,15 +23,12 @@ ocaml_import(
         "@ocaml//platform/emitter:vm" : [],
         "@ocaml//platform/emitter:sys": glob(["*.o"])
     }, no_match_error="Bad platform"),
-    # afiles     = glob(["*.a"]),
-    # astructs   = glob(["*.cmx"]),
-    # ofiles     = glob(["*.o"]),
     cmts       = glob(["*.cmt"]),
     cmtis      = glob(["*.cmti"]),
     srcs       = glob(["*.ml", "*.mli"]),
     all        = glob(["bigarray.*"]),
 
-    deps       = ["@ocaml//unix"],
+    deps       = ["@ocaml//lib/unix"],
     visibility = ["//visibility:public"],
 )
 
@@ -42,8 +39,6 @@ ocaml_import(
         "@ocaml//platform/emitter:vm": "bigarray.cma",
         "//conditions:default":         "bigarray.cmxs",
     }),
-    # cmxs       = "bigarray.cmxs",
-    # cma        = "bigarray.cma",
-    deps       = ["@ocaml//unix"],
+    deps       = ["@ocaml//lib/unix"],
     visibility = ["//visibility:public"],
 );

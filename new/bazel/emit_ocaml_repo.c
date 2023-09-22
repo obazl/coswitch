@@ -1206,12 +1206,18 @@ void _emit_ocaml_bin_symlinks(char *opam_switch_pfx,
 /*     TRACE_EXIT; */
 /* } */
 
-/* **************************************************************** */
+/* ************************************************ */
+/*
+  pre-v5: <switch-pfx>/lib/bigarray, redirects to lib/ocaml
+  v5+: no bigarray subdir anywhere
+ */
 void emit_ocaml_bigarray_pkg(char *runfiles,
                              char *switch_lib,
                              char *coswitch_lib)
 {
     TRACE_ENTRY;
+
+
     UT_string *bigarray_dir;
     utstring_new(bigarray_dir);
     utstring_printf(bigarray_dir,
@@ -1248,8 +1254,9 @@ void emit_ocaml_bigarray_pkg(char *runfiles,
     utstring_printf(src_file, "%s/%s",
                     utstring_body(templates),
                     "ocaml_bigarray.BUILD");
+
     utstring_printf(dst_dir,
-                    "%s/ocaml/bigarray",
+                    "%s/ocaml/lib/bigarray",
                     coswitch_lib);
     mkdir_r(utstring_body(dst_dir));
     utstring_printf(dst_file, "%s/BUILD.bazel",
@@ -2076,8 +2083,8 @@ void emit_ocaml_str_pkg(char *runfiles,
 #endif
             utstring_free(str_dir);
             return;
-#if defined(TRACING)
         } else {
+#if defined(TRACING)
             // found lib/ocaml/str
             log_warn(YEL "FOUND: %s", utstring_body(str_dir));
 #endif
@@ -2115,7 +2122,7 @@ void emit_ocaml_str_pkg(char *runfiles,
         // we found lib/ocaml/str, so we need to emit the
         // toplevel w/alias, lib/str
         // but we only symlink to lib/ocaml/lib/str
-        log_debug("EMITTING STR TOPLEVEL");
+        /* log_debug("EMITTING STR TOPLEVEL"); */
         utstring_printf(dst_dir,
                         "%s/str",
                         coswitch_lib);
@@ -2180,7 +2187,7 @@ void _symlink_ocaml_str(UT_string *str_dir, char *tgtdir)
     TRACE_ENTRY;
 #if defined(TRACING)
     if (verbosity > 3) {
-        log_debug("src: %s, dst %s",
+        log_debug("src: %s,\n\tdst %s",
                   utstring_body(str_dir),
                   tgtdir);
     }
@@ -2199,8 +2206,8 @@ void _symlink_ocaml_str(UT_string *str_dir, char *tgtdir)
 
     DIR *d = opendir(utstring_body(str_dir));
     if (d == NULL) {
-        fprintf(stderr, "Unable to opendir for symlinking str: %s\n",
-                utstring_body(str_dir));
+        log_error("Unable to opendir for symlinking str: %s\n",
+                  utstring_body(str_dir));
         /* exit(EXIT_FAILURE); */
         /* this can happen if a related pkg is not installed */
         /* example, see topkg and topkg-care */
@@ -2208,10 +2215,16 @@ void _symlink_ocaml_str(UT_string *str_dir, char *tgtdir)
     /* } else { */
     /*     if (verbosity > 1) */
     /*         log_debug("opened dir %s", utstring_body(str_dir)); */
+    } else {
+#if defined(TRACING)
+        log_debug("fopened %s as symlink src",
+                  utstring_body(str_dir));
+#endif
     }
 
     struct dirent *direntry;
     while ((direntry = readdir(d)) != NULL) {
+        /* log_debug("direntry: %s", direntry->d_name); */
         if(direntry->d_type==DT_REG){
             /* link files starting with "str." */
             if (strncmp("str.", direntry->d_name, 4) != 0)
@@ -2224,9 +2237,9 @@ void _symlink_ocaml_str(UT_string *str_dir, char *tgtdir)
             utstring_renew(dst);
             utstring_printf(dst, "%s/%s",
                             tgtdir, direntry->d_name);
-            /* printf("symlinking %s to %s\n", */
-            /*        utstring_body(src), */
-            /*        utstring_body(dst)); */
+            /* log_debug("symlinking %s to %s", */
+            /*           utstring_body(src), */
+            /*           utstring_body(dst)); */
             rc = symlink(utstring_body(src),
                          utstring_body(dst));
             symlink_ct++;
