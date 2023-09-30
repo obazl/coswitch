@@ -20,6 +20,47 @@ toolchain_selector(
         "@ocaml//platform/executor:sys",
         # "@ocaml//platform/emitter:sys"
     ],
+    toolchain_constraints = [
+        "@ocaml//runtime:std?"
+    ],
+    visibility     = ["//visibility:public"],
+)
+
+toolchain_selector(
+    name      = "ocamlopt.opt.endo.d",
+    toolchain = "@ocaml//toolchain/adapters/local:ocamlopt.opt.d",
+    build_host_constraints  = [
+        "@ocaml//platform/arch:sys",
+        "@ocaml//platform/executor:sys",
+        "@ocaml//platform/emitter:sys"
+    ],
+    target_host_constraints  = [
+        "@ocaml//platform/arch:sys",
+        "@ocaml//platform/executor:sys",
+        # "@ocaml//platform/emitter:sys"
+    ],
+    toolchain_constraints = [
+        "@ocaml//runtime:dbg?"
+    ],
+    visibility     = ["//visibility:public"],
+)
+
+toolchain_selector(
+    name      = "ocamlopt.opt.endo.i",
+    toolchain = "@ocaml//toolchain/adapters/local:ocamlopt.opt.d",
+    build_host_constraints  = [
+        "@ocaml//platform/arch:sys",
+        "@ocaml//platform/executor:sys",
+        "@ocaml//platform/emitter:sys"
+    ],
+    target_host_constraints  = [
+        "@ocaml//platform/arch:sys",
+        "@ocaml//platform/executor:sys",
+        # "@ocaml//platform/emitter:sys"
+    ],
+    toolchain_constraints = [
+        "@ocaml//runtime:instrumented?"
+    ],
     visibility     = ["//visibility:public"],
 )
 
@@ -35,6 +76,9 @@ toolchain_selector(
     target_host_constraints  = [
         "@ocaml//platform/arch:sys",
         "@ocaml//platform/executor:vm"
+    ],
+    toolchain_constraints = [
+        "@ocaml//toolchain/debug:disabled"
     ],
     visibility              = ["//visibility:public"],
 )

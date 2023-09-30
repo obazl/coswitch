@@ -53,7 +53,9 @@ cc_library(
     ],
     local_defines = DEFINES,
     data  = [
+        # WARNING: keep in sync with //opam/BUILD.bazel
         "//new/templates/ocaml:ocaml_bigarray.BUILD",
+        "//new/templates/ocaml:ocaml_bigarray_alias.BUILD",
         "//new/templates/ocaml:ocaml_c_api.BUILD",
         "//new/templates/ocaml:ocaml_compiler-libs.BUILD",
         "//new/templates/ocaml/compiler_libs:bytecomp.BUILD",
@@ -66,6 +68,8 @@ cc_library(
         "//new/templates/ocaml:ocaml_num.BUILD",
         "//new/templates/ocaml:ocaml_ocamldoc.BUILD",
         "//new/templates/ocaml:ocaml_runtime.BUILD",
+        "//new/templates/ocaml/runtime:runtime_sys.BUILD",
+        "//new/templates/ocaml/runtime:runtime_vm.BUILD",
         "//new/templates/ocaml:ocaml_rtevents.BUILD",
         "//new/templates/ocaml:ocaml_rtevents_alias.BUILD",
         "//new/templates/ocaml:ocaml_stdlib.BUILD",

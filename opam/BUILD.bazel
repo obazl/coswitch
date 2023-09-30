@@ -20,6 +20,8 @@ sh_binary(
         "//new/templates/ocaml:ocaml_num.BUILD",
         "//new/templates/ocaml:ocaml_ocamldoc.BUILD",
         "//new/templates/ocaml:ocaml_runtime.BUILD",
+        "//new/templates/ocaml/runtime:runtime_sys.BUILD",
+        "//new/templates/ocaml/runtime:runtime_vm.BUILD",
         "//new/templates/ocaml:ocaml_rtevents.BUILD",
         "//new/templates/ocaml:ocaml_rtevents_alias.BUILD",
         "//new/templates/ocaml:ocaml_stdlib.BUILD",

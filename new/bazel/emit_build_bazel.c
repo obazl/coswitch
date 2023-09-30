@@ -3452,8 +3452,8 @@ EXPORT void emit_build_bazel(// char *ws_name,
     if ((strncmp(pkg_name, "ctypes", 6) == 0)
         && strlen(pkg_name) == 6) {
         //FIXME: use a template file?
+        /* "load(\"@rules_cc//cc:defs.bzl\", \"cc_library\")\n" */
         fprintf(ostream,
-                "load(\"@rules_cc//cc:defs.bzl\", \"cc_library\")\n"
                 "cc_library(\n"
                 "    name = \"hdrs\",\n"
                 /* "    srcs = glob([\"*.a\"]),\n" */
@@ -3465,8 +3465,8 @@ EXPORT void emit_build_bazel(// char *ws_name,
     /* special case */
     if ((strncmp(pkg_name, "cstubs", 6) == 0)
         && strlen(pkg_name) == 6) {
+        /* "load(\"@rules_cc//cc:defs.bzl\", \"cc_library\")\n" */
         fprintf(ostream,
-                "load(\"@rules_cc//cc:defs.bzl\", \"cc_library\")\n"
                 "cc_library(\n"
                 "    name = \"hdrs\",\n"
                 /* "    srcs = glob([\"*.a\"]),\n" */

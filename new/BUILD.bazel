@@ -45,6 +45,10 @@ cc_binary(
         "-I$(@liblogc)/src",
         "-I$(@uthash)/src",
     ],
+    linkopts = [
+        # "--verbose",
+        # "-v",
+    ],
     local_defines = DEFINES + select({
         "//config/compilation_mode:dbg?": ["TRACING", "DEBUG_MIBL"],
         "//conditions:default":   []
