@@ -10,9 +10,9 @@ bazel_dep(name = "cc_config", version = "1.0.0")
 
 bazel_dep(name = "libs7", version = "1.0.0")
 bazel_dep(name = "dune_s7",  version = "1.0.0")
-local_path_override(
-    module_name = "dune_s7",
-    path = "/Users/gar/libs7/dune_s7")
+# local_path_override(
+#     module_name = "dune_s7",
+#     path = "/Users/gar/libs7/dune_s7")
 
 bazel_dep(name = "cwalk", version = "1.2.7")
 bazel_dep(name = "gopt", version = "10.0.0")
