@@ -6,6 +6,8 @@ load("@makeheaders//src:RULES.bzl", "makeheaders")
 
 TOOLCHAINS = ["//:repo_paths"]
 
+exports_files(["coswitch.c"])
+
 ##########
 cc_binary(
     name  = "new",
@@ -49,10 +51,11 @@ cc_binary(
         # "--verbose",
         # "-v",
     ],
-    local_defines = DEFINES + select({
-        "//config/compilation_mode:dbg?": ["TRACING", "DEBUG_MIBL"],
-        "//conditions:default":   []
-    }),
+    local_defines = DEFINES,
+    # + select({
+    #     "//config/compilation_mode:dbg?": ["TRACING", "DEBUG_MIBL"],
+    #     "//conditions:default":   []
+    # }),
     linkstatic = 1,
     toolchains = TOOLCHAINS,
 )
@@ -78,10 +81,10 @@ makeheaders(
         "//src:ansi_colors.h",
     ] + select({
         "//config/profile:dev?": [
-            "//src:trace_dev.h",
+            "//src:macros_debug.h",
         ],
         "//conditions:default":   [
-            "//src:trace_prod.h",
+            "//src:macros_ndebug.h",
         ]
     }),
 )

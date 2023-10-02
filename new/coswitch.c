@@ -36,12 +36,16 @@ static UT_string *meta_path;
 static char *switch_name;
 static char *coswitch_name; // may be "local"
 
-#if defined(DEVBUILD)
-bool coswitch_debug;
-int  coswitch_debug_level;
-bool debug_findlib;
+#if defined(DEBUG)
 bool coswitch_trace;
+int  coswitch_debug;
+extern bool findlib_trace;
+extern int  findlib_debug;
 #endif
+
+bool quiet;
+bool verbose;
+int  verbosity;
 
 int level = 0;
 int spfactor = 2;
@@ -64,10 +68,6 @@ char *default_version = "0.0.0";
 int   default_compat  = 0;
 char *bazel_compat    = "6.0.0";
 
-bool quiet;
-bool verbose;
-int  verbosity;
-
 int log_writes = 1; // threshhold for logging all writes
 int log_symlinks = 2;
 /* extern */ bool enable_jsoo;
@@ -79,9 +79,12 @@ enum OPTS {
     OPT_SWITCH,
     FLAG_JSOO,
     FLAG_CLEAN,
-    FLAG_DEBUG,
     FLAG_SHOW_CONFIG,
+#if defined(DEBUG)
+    FLAG_DEBUG,
     FLAG_TRACE,
+    OPT_FINDLIB_DEBUG,
+#endif
     FLAG_VERBOSE,
     FLAG_QUIET,
     FLAG_HELP,
@@ -89,14 +92,16 @@ enum OPTS {
 };
 
 void _print_usage(void) {
-    printf("Usage:\t$ bazel run @obazl//convert [flags, options]\n");
+    printf("Usage:\t$ bazel run @coswitch//new [flags, options]\n");
 
     printf("Flags\n");
     printf("\t-j, --jsoo\t\t\tImport Js_of_ocaml resources.\n");
-    printf("\t-c, --clean\t\t\tClean coswitch and reset to uninitialized state.\n");
+    printf("\t-c, --clean\t\t\tClean coswitch and reset to uninitialized state. (temporarily disabled)\n");
 
-    printf("\t-d, --debug\t\t\tEnable all debugging flags.\n");
-    /* printf("\t-t, --trace\t\t\tEnable all trace flags.\n"); */
+#if defined(DEBUG)
+    printf("\t-d, --debug\t\t\tEnable debug flags. Repeatable.\n");
+    printf("\t-t, --trace\t\t\tEnable all trace flags (debug only).\n");
+#endif
     printf("\t-v, --verbose\t\t\tEnable verbosity. Repeatable.\n");
 }
 
@@ -110,12 +115,19 @@ static struct option options[] = {
                    .flags=GOPT_ARGUMENT_REQUIRED},
     [FLAG_CLEAN] = {.long_name="clean",.short_name='c',
                     .flags=GOPT_ARGUMENT_FORBIDDEN},
-    [FLAG_DEBUG] = {.long_name="debug",.short_name='d',
-                    .flags=GOPT_ARGUMENT_FORBIDDEN | GOPT_REPEATABLE},
     [FLAG_SHOW_CONFIG] = {.long_name="show-config",
                           .flags=GOPT_ARGUMENT_FORBIDDEN},
+
+#if defined(DEBUG)
+    [FLAG_DEBUG] = {.long_name="debug",.short_name='d',
+                    .flags=GOPT_ARGUMENT_FORBIDDEN | GOPT_REPEATABLE},
     [FLAG_TRACE] = {.long_name="trace",.short_name='t',
                     .flags=GOPT_ARGUMENT_FORBIDDEN},
+    [OPT_FINDLIB_DEBUG] = {.long_name="findlib-debug",
+                           .flags=GOPT_ARGUMENT_REQUIRED},
+                           /* .flags=GOPT_REPEATABLE}, */
+#endif
+
     [FLAG_VERBOSE] = {.long_name="verbose",.short_name='v',
                       .flags=GOPT_ARGUMENT_FORBIDDEN | GOPT_REPEATABLE},
     [FLAG_QUIET] = {.long_name="quiet",.short_name='q',
@@ -138,19 +150,27 @@ void _set_options(struct option options[])
         verbosity = options[FLAG_VERBOSE].count;
     }
 
+#if defined(DEBUG)
     if (options[FLAG_DEBUG].count) {
-#if defined(TRACING)
-        coswitch_debug = true;
-        coswitch_debug_level = options[FLAG_DEBUG].count;
-#endif
+        coswitch_debug = options[FLAG_DEBUG].count;
+    }
+    if (options[OPT_FINDLIB_DEBUG].count) {
+        errno = 0;
+        long tmp = strtol(options[OPT_FINDLIB_DEBUG].argument,
+                          NULL, 10);
+        if (errno) {
+            /* fprintf(stderr, "--findlib-debug must be an int."); */
+            log_error( "--findlib-debug must be an int.");
+            exit(EXIT_FAILURE);
+        } else {
+            findlib_debug = (int)tmp;
+        }
     }
 
     if (options[FLAG_TRACE].count) {
-#if defined(TRACING)
         coswitch_trace = true;
-#endif
     }
-
+#endif
     if (options[FLAG_JSOO].count) {
         enable_jsoo = true;
     }

@@ -1,5 +1,5 @@
 exports_files([
     "ansi_colors.h",
-    "trace_dev.h",
-    "trace_prod.h",
+    "macros_debug.h",
+    "macros_ndebug.h",
 ])

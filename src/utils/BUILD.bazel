@@ -52,7 +52,13 @@ makeheaders(
     hdrs_srcs = ["utils.c"],
     additional_srcs = [
         "//src:ansi_colors.h",
-        "//src:trace_prod.h"
-    ]
+    ] + select({
+        "//config/compilation_mode:fastbuild?": [
+            "//src:macros_debug.h",
+        ],
+        "//conditions:default":   [
+            "//src:macros_ndebug.h",
+        ]
+    })
 )
 

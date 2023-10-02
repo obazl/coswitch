@@ -2,8 +2,8 @@ always --enable_bzlmod
 
 try-import .config/registries.bazelrc
 
-common --registry=https://raw.githubusercontent.com/obazl/registry/dev/
-# common --registry=https://raw.githubusercontent.com/obazl/registry/main/
+common --registry=https://raw.githubusercontent.com/obazl/registry/main/
+#common --registry=https://raw.githubusercontent.com/obazl/registry/dev/
 common --registry=https://bcr.bazel.build
 
 try-import .config/user.bazelrc

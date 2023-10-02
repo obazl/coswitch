@@ -19,6 +19,11 @@ config_setting(
 )
 
 config_setting(
+    name = "fastbuild?",
+    values = {"compilation_mode": "fastbuild"}
+)
+
+config_setting(
     name = "opt?",
     values = {"compilation_mode": "opt"}
 )

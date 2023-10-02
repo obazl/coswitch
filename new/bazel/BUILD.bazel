@@ -8,8 +8,7 @@ load("//config/cc:CONFIG.bzl",
      COPTS = "BASE_COPTS",
      "BASE_DEFINES")
 
-DEFINES = BASE_DEFINES
-# + ["TRACING"]
+DEFINES = BASE_DEFINES # + ["TRACING"]
 
 exports_files(["emit_build_bazel.c",
                "emit_ocaml_repo.c",
@@ -120,14 +119,15 @@ makeheaders(
         "utils.c"
     ],
     additional_srcs = [
+        "//new:coswitch.c",
         "//src:ansi_colors.h",
         "//src/utils:utils.c"
     ] + select({
-        "//config/profile:dev?": [
-            "//src:trace_dev.h",
+        "//config/compilation_mode:fastbuild?": [
+            "//src:macros_debug.h",
         ],
         "//conditions:default":   [
-            "//src:trace_prod.h",
+            "//src:macros_ndebug.h",
         ]
     }),
 
