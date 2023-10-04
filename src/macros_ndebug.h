@@ -9,7 +9,6 @@
 #define TRACE_EXIT
 #define TRACE_ENTRY_MSG(fmt, ...)
 #define TRACE_S7_DUMP(msg, x)
-#define DUMP_PREFIX(pfx)
 
 #define LOG_DEBUG(lvl, fmt, ...)
 #define LOG_ERROR(lvl, fmt, ...)
