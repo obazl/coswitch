@@ -309,7 +309,7 @@ void pkg_handler(char *site_lib, /* switch_lib */
     /* log_debug("pkg->module_name: %s", pkg->module_name); */
 
     char *pkg_name = strdup(pkg->module_name);
-    /* log_debug("pkg_name: %s", pkg_name); */
+    LOG_DEBUG(0, "pkg_name: %s", pkg_name);
 
     /* char *p = pkg_name; */
     /* for (p = pkg_name; *p; ++p) *p = tolower(*p); */
@@ -374,7 +374,7 @@ void pkg_handler(char *site_lib, /* switch_lib */
                      utstring_body(coswitch_lib),
                      /* utstring_body(ws_root), */
                      0,         /* indent level */
-                     pkg_name,
+                     pkg_name, // pkg_root
                      pkg_parent, /* needed for handling subpkgs */
                      NULL, // "buildfiles",        /* _pkg_prefix */
                      utstring_body(imports_path),

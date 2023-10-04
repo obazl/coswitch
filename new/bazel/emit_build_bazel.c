@@ -3145,7 +3145,7 @@ EXPORT void emit_build_bazel(// char *ws_name,
 {
     TRACE_ENTRY;
     /* ENTRY */
-#ifdef DEBUG
+#if defined(DEBUG_fastbuild)
     LOG_INFO(0, "\tpkg: %s", obzl_meta_package_name(_pkg));
     LOG_INFO(0, "\tpkg->name: %s", obzl_meta_package_name(_pkg));
     LOG_INFO(0, "\tcoswitch_lib: %s", coswitch_lib);
@@ -3183,7 +3183,7 @@ EXPORT void emit_build_bazel(// char *ws_name,
     /* } */
 
     char *pkg_name = obzl_meta_package_name(_pkg);
-#ifdef DEBUG
+#if defined(DEBUG_fastbuild)
     /* log_set_quiet(false); */
     /* LOG_DEBUG(0, "%*sparsed name: %s", indent, sp, pkg_name); */
     /* LOG_DEBUG(0, "%*spkg dir:  %s", indent, sp, obzl_meta_package_dir(_pkg)); */

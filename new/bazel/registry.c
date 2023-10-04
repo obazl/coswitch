@@ -75,10 +75,12 @@ EXPORT void emit_registry_record(UT_string *registry,
 {
     TRACE_ENTRY;
     char *pkg_name;
+    char *module_name;
     char version[256];
     semver_t *semv;
     if (pkg) {
-        pkg_name = pkg->module_name;
+        pkg_name = pkg->name;
+        module_name = pkg->module_name;
         semv = findlib_pkg_version(pkg);
         sprintf(version, "%d.%d.%d",
                 semv->major, semv->minor, semv->patch);
@@ -86,36 +88,41 @@ EXPORT void emit_registry_record(UT_string *registry,
                               compiler_version,
                               pkg, pkgs,
                               pkg_name,
+                              module_name,
                               version); //, semv->major);
     } else {
         _emit_registry_record(registry,
                               compiler_version,
                               pkg, pkgs,
-                              "ocaml", "0.0.0");
+                              "ocaml", "ocaml", "0.0.0");
         _emit_registry_record(registry,
                               compiler_version,
                               pkg, pkgs,
-                              "stublibs", "0.0.0");
+                              "stublibs", "stublibs", "0.0.0");
         _emit_registry_record(registry,
                               compiler_version,
                               pkg, pkgs,
-                              "compiler-libs", "0.0.0");
+                              "compiler-libs",
+                              "compiler-libs",
+                              "0.0.0");
         _emit_registry_record(registry,
                               compiler_version,
                               pkg, pkgs,
-                              "dynlink", "0.0.0");
+                              "dynlink",
+                              "dynlink",
+                              "0.0.0");
         _emit_registry_record(registry,
                               compiler_version,
                               pkg, pkgs,
-                              "str", "0.0.0");
+                              "str", "str", "0.0.0");
         _emit_registry_record(registry,
                               compiler_version,
                               pkg, pkgs,
-                              "threads", "0.0.0");
+                              "threads", "threads", "0.0.0");
         _emit_registry_record(registry,
                               compiler_version,
                               pkg, pkgs,
-                              "unix", "0.0.0");
+                              "unix", "unix", "0.0.0");
     }
     TRACE_EXIT;
 }
@@ -124,7 +131,10 @@ EXPORT void _emit_registry_record(UT_string *registry,
                                   char *compiler_version,
                                   struct obzl_meta_package *pkg,
                                   struct obzl_meta_package *pkgs,
+                                  //WARN: module name is
+                                  // pkg_name, downcased
                                   char *pkg_name,
+                                  char *module_name,
                                   char *version)
 {
     TRACE_ENTRY;
@@ -132,7 +142,7 @@ EXPORT void _emit_registry_record(UT_string *registry,
     utstring_new(tmp);
     utstring_printf(tmp, "%s/modules/%s",
                     utstring_body(registry),
-                    pkg_name);
+                    module_name);
     mkdir_r(utstring_body(tmp));
 
     UT_string *reg_dir;
@@ -140,7 +150,7 @@ EXPORT void _emit_registry_record(UT_string *registry,
     utstring_printf(reg_dir,
                     "%s/modules/%s",
                     utstring_body(registry),
-                    pkg_name);
+                    module_name);
                     /* pkg_name); */
                     /* default_version); */
                     /* (char*)version); */
