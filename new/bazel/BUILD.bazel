@@ -101,10 +101,6 @@ cc_library(
         "//new/templates/ocaml:ocaml_unix.BUILD",
         "//new/templates/ocaml:ocaml_unix_alias.BUILD",
     ],
-    # ] + select({
-    #     "//compilation_mode:dbg?": ["//src:debug"],
-    #     "//conditions:default": []
-    # }),
     toolchains = TOOLCHAINS,
     visibility = ["//visibility:public"]
 )

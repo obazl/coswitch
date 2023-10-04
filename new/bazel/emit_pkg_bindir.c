@@ -17,8 +17,9 @@
 
 extern s7_scheme *s7;
 
-#if defined(DEVBUILD)
-extern bool coswitch_debug;
+#if defined(DEBUG_fastbuild)
+extern int  coswitch_debug;
+extern bool coswitch_trace;
 #endif
 
 /* extern UT_string *opam_switch_lib; */
@@ -62,7 +63,7 @@ UT_array *_get_pkg_stublibs(s7_scheme *s7, char *pkg, void *_stanzas)
     (void)pkg;
 
     s7_pointer stanzas = (s7_pointer) _stanzas;
-/* #if defined(DEVBUILD) */
+/* #if defined(DEBUG_fastbuild) */
 /*     log_debug("stanzas: %s", TO_STR(stanzas)); */
 /* #endif */
 
@@ -95,7 +96,7 @@ UT_array *_get_pkg_stublibs(s7_scheme *s7, char *pkg, void *_stanzas)
         return stubs;
     }
 
-#if defined(DEVBUILD)
+#if defined(DEBUG_fastbuild)
     if (coswitch_debug) {
         /* log_debug("Pkg: %s", utstring_body(dune_pkg_file)); */
         LOG_S7_DEBUG(RED "STUBLIBS" CRESET, stublibs);
@@ -116,13 +117,13 @@ UT_array *_get_pkg_stublibs(s7_scheme *s7, char *pkg, void *_stanzas)
         //gc_loc = s7_gc_protect(s7, iter);
     if (!s7_is_iterator(iter)) {
         log_error("s7_is_iterator fail");
-#if defined(DEVBUILD)
+#if defined(DEBUG_fastbuild)
         LOG_S7_DEBUG("not an iterator", iter);
 #endif
     }
     if (s7_iterator_is_at_end(s7, iter)) {
         log_error("s7_iterator_is_at_end prematurely");
-#if defined(DEVBUILD)
+#if defined(DEBUG_fastbuild)
         LOG_S7_DEBUG("iterator prematurely done", iter);
 #endif
     }
@@ -130,7 +131,7 @@ UT_array *_get_pkg_stublibs(s7_scheme *s7, char *pkg, void *_stanzas)
     while (true) {
         stublib_file = s7_iterate(s7, iter);
         if (s7_iterator_is_at_end(s7, iter)) break;
-#if defined(DEVBUILD)
+#if defined(DEBUG_fastbuild)
         LOG_S7_DEBUG("stublib_file", stublib_file);
 #endif
         f = s7_object_to_c_string(s7, stublib_file);
@@ -176,7 +177,7 @@ UT_array *_get_pkg_executables(s7_scheme *s7, void *_stanzas)
         return bins;
     }
 
-#if defined(DEVBUILD)
+#if defined(DEBUG_fastbuild)
     if (coswitch_debug) {
         /* log_debug("Pkg: %s", utstring_body(dune_pkg_file)); */
         LOG_S7_DEBUG("executables", executables);
@@ -192,13 +193,13 @@ UT_array *_get_pkg_executables(s7_scheme *s7, void *_stanzas)
         //gc_loc = s7_gc_protect(s7, iter);
     if (!s7_is_iterator(iter)) {
         log_error("s7_make_iterator failed");
-#if defined(DEVBUILD)
+#if defined(DEBUG_fastbuild)
         LOG_S7_DEBUG("not an iterator", iter);
 #endif
     }
     if (s7_iterator_is_at_end(s7, iter)) {
         log_error("s7_iterator_is_at_end prematurely");
-#if defined(DEVBUILD)
+#if defined(DEBUG_fastbuild)
         LOG_S7_DEBUG("iterator prematurely done", iter);
 #endif
     }
@@ -206,7 +207,7 @@ UT_array *_get_pkg_executables(s7_scheme *s7, void *_stanzas)
     while (true) {
         binfile = s7_iterate(s7, iter);
         if (s7_iterator_is_at_end(s7, iter)) break;
-#if defined(DEVBUILD)
+#if defined(DEBUG_fastbuild)
         LOG_S7_DEBUG("binfile", binfile);
 #endif
         f = s7_object_to_c_string(s7, binfile);

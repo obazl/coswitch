@@ -36,11 +36,13 @@ static UT_string *meta_path;
 static char *switch_name;
 static char *coswitch_name; // may be "local"
 
-#if defined(DEBUG)
+#if defined(DEBUG_fastbuild)
 bool coswitch_trace;
 int  coswitch_debug;
-extern bool findlib_trace;
-extern int  findlib_debug;
+extern bool findlibc_trace;
+extern int  findlibc_debug;
+extern bool opamc_trace;
+extern int  opamc_debug;
 #endif
 
 bool quiet;
@@ -80,10 +82,13 @@ enum OPTS {
     FLAG_JSOO,
     FLAG_CLEAN,
     FLAG_SHOW_CONFIG,
-#if defined(DEBUG)
+#if defined(DEBUG_fastbuild)
     FLAG_DEBUG,
     FLAG_TRACE,
-    OPT_FINDLIB_DEBUG,
+    OPT_DEBUG_FINDLIBC,
+    FLAG_TRACE_FINDLIBC,
+    OPT_DEBUG_OPAMC,
+    FLAG_TRACE_OPAMC,
 #endif
     FLAG_VERBOSE,
     FLAG_QUIET,
@@ -98,7 +103,7 @@ void _print_usage(void) {
     printf("\t-j, --jsoo\t\t\tImport Js_of_ocaml resources.\n");
     printf("\t-c, --clean\t\t\tClean coswitch and reset to uninitialized state. (temporarily disabled)\n");
 
-#if defined(DEBUG)
+#if defined(DEBUG_fastbuild)
     printf("\t-d, --debug\t\t\tEnable debug flags. Repeatable.\n");
     printf("\t-t, --trace\t\t\tEnable all trace flags (debug only).\n");
 #endif
@@ -118,14 +123,21 @@ static struct option options[] = {
     [FLAG_SHOW_CONFIG] = {.long_name="show-config",
                           .flags=GOPT_ARGUMENT_FORBIDDEN},
 
-#if defined(DEBUG)
+#if defined(DEBUG_fastbuild)
     [FLAG_DEBUG] = {.long_name="debug",.short_name='d',
                     .flags=GOPT_ARGUMENT_FORBIDDEN | GOPT_REPEATABLE},
     [FLAG_TRACE] = {.long_name="trace",.short_name='t',
                     .flags=GOPT_ARGUMENT_FORBIDDEN},
-    [OPT_FINDLIB_DEBUG] = {.long_name="findlib-debug",
+
+    [OPT_DEBUG_FINDLIBC] = {.long_name="debug-findlibc",
                            .flags=GOPT_ARGUMENT_REQUIRED},
-                           /* .flags=GOPT_REPEATABLE}, */
+    [FLAG_TRACE_FINDLIBC] = {.long_name="trace-findlibc",
+                             .flags=GOPT_ARGUMENT_FORBIDDEN},
+
+    [OPT_DEBUG_OPAMC] = {.long_name="debug-opamc",
+                           .flags=GOPT_ARGUMENT_REQUIRED},
+    [FLAG_TRACE_OPAMC] = {.long_name="trace",
+                          .flags=GOPT_ARGUMENT_FORBIDDEN},
 #endif
 
     [FLAG_VERBOSE] = {.long_name="verbose",.short_name='v',
@@ -150,26 +162,46 @@ void _set_options(struct option options[])
         verbosity = options[FLAG_VERBOSE].count;
     }
 
-#if defined(DEBUG)
+#if defined(DEBUG_fastbuild)
     if (options[FLAG_DEBUG].count) {
         coswitch_debug = options[FLAG_DEBUG].count;
     }
-    if (options[OPT_FINDLIB_DEBUG].count) {
+    if (options[FLAG_TRACE].count) {
+        coswitch_trace = true;
+    }
+
+    if (options[OPT_DEBUG_FINDLIBC].count) {
         errno = 0;
-        long tmp = strtol(options[OPT_FINDLIB_DEBUG].argument,
+        long tmp = strtol(options[OPT_DEBUG_FINDLIBC].argument,
                           NULL, 10);
         if (errno) {
             /* fprintf(stderr, "--findlib-debug must be an int."); */
             log_error( "--findlib-debug must be an int.");
             exit(EXIT_FAILURE);
         } else {
-            findlib_debug = (int)tmp;
+            findlibc_debug = (int)tmp;
         }
     }
-
-    if (options[FLAG_TRACE].count) {
-        coswitch_trace = true;
+    if (options[FLAG_TRACE_FINDLIBC].count) {
+        findlibc_trace = true;
     }
+
+    if (options[OPT_DEBUG_OPAMC].count) {
+        errno = 0;
+        long tmp = strtol(options[OPT_DEBUG_OPAMC].argument,
+                          NULL, 10);
+        if (errno) {
+            /* fprintf(stderr, "--findlib-debug must be an int."); */
+            log_error( "--debug-opamc must be an int.");
+            exit(EXIT_FAILURE);
+        } else {
+            opamc_debug = (int)tmp;
+        }
+    }
+    if (options[FLAG_TRACE_OPAMC].count) {
+        opamc_trace = true;
+    }
+
 #endif
     if (options[FLAG_JSOO].count) {
         enable_jsoo = true;

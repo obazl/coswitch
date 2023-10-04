@@ -212,7 +212,7 @@ EXPORT void _emit_registry_record(UT_string *registry,
         emit_module_file(reg_file, compiler_version, pkg, pkgs);
     }
     // JUST FOR DEBUGGING:
-#if defined(DEVBUILD)
+#if defined(DEBUG_fastbuild)
     if (pkg) {
         if (pkg->metafile) {
             utstring_new(reg_file);

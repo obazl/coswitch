@@ -52,10 +52,6 @@ cc_binary(
         # "-v",
     ],
     local_defines = DEFINES,
-    # + select({
-    #     "//config/compilation_mode:dbg?": ["TRACING", "DEBUG_MIBL"],
-    #     "//conditions:default":   []
-    # }),
     linkstatic = 1,
     toolchains = TOOLCHAINS,
 )
@@ -65,12 +61,6 @@ makeheaders(
     name = "mkhdrs",
     hdrs_srcs = [
         "coswitch.c",
-        # "module.c",
-        # "package.c",
-        # "workspace.c",
-        # "help.c",
-        # "xdg.c",
-        # "test.c",
     ],
     additional_srcs = [
         "//new/bazel:emit_build_bazel.c",
