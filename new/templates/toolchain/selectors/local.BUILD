@@ -78,7 +78,7 @@ toolchain_selector(
         "@ocaml//platform/executor:vm"
     ],
     toolchain_constraints = [
-        "@ocaml//toolchain/debug:disabled"
+        "@ocaml//runtime:std?"
     ],
     visibility              = ["//visibility:public"],
 )
