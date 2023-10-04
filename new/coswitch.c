@@ -308,7 +308,7 @@ void pkg_handler(char *site_lib, /* switch_lib */
     /* log_debug("pkg->name: %s", pkg->name); */
     /* log_debug("pkg->module_name: %s", pkg->module_name); */
 
-    char *pkg_name = strdup(pkg->module_name);
+    char *pkg_name = strdup(pkg->name);
     LOG_DEBUG(0, "pkg_name: %s", pkg_name);
 
     /* char *p = pkg_name; */
@@ -689,12 +689,12 @@ int main(int argc, char *argv[])
 
     // now the registry records
     struct obzl_meta_package *pkg;
-    char *pkg_name, *p;
+    char *pkg_name; // , *p;
     for (pkg = paths.pkgs; pkg != NULL; pkg = pkg->hh.next) {
         pkg_name = strdup(pkg->name);
-        for (p = pkg_name; *p; ++p) *p = tolower(*p);
-        if (verbosity > log_writes)
-            log_debug(BLU " PKG %s" CRESET, pkg_name);
+        /* for (p = pkg_name; *p; ++p) *p = tolower(*p); */
+        /* if (verbosity > log_writes) */
+        /*     log_debug(BLU " PKG %s" CRESET, pkg_name); */
         semver_t *version = findlib_pkg_version(pkg);
         if (verbosity > 2) {
             log_debug("    version %d.%d.%d",
