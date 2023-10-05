@@ -25,12 +25,13 @@ ocaml_toolchain_adapter(
     instrumented_runtime = "@ocaml//runtime:libasmruni.a",
     pic_runtime          = "@ocaml//runtime:libasmrun_pic.a",
     shared_runtime       = "@ocaml//runtime:libasmrun_shared.so",
+    vmlibs               = "@stublibs//lib/stublibs",
+    vmlibs_path          = "@stublibs//lib/stublibs:path",
 
     ## omit vm stuff for >sys toolchains?
     # vmruntime            = "@ocaml//bin:ocamlrun",
     # vmruntime_debug        = "@ocaml//bin:ocamlrund",
     # vmruntime_instrumented = "@ocaml//bin:ocamlruni",
-    # vmlibs                 = "@stublibs//lib/stublibs",
 )
 
 ocaml_toolchain_adapter(
@@ -52,12 +53,13 @@ ocaml_toolchain_adapter(
     instrumented_runtime = "@ocaml//runtime:libasmruni.a",
     pic_runtime          = "@ocaml//runtime:libasmrun_pic.a",
     shared_runtime       = "@ocaml//runtime:libasmrun_shared.so",
+    vmlibs               = "@stublibs//lib/stublibs",
+    vmlibs_path          = "@stublibs//lib/stublibs:path",
 
     ## omit vm stuff for >sys toolchains?
     # vmruntime              = "@ocaml//bin:ocamlrun",
     # vmruntime_debug        = "@ocaml//bin:ocamlrund",
     # vmruntime_instrumented = "@ocaml//bin:ocamlruni",
-    # vmlibs                 = "@stublibs//lib/stublibs",
 )
 
 ########################
@@ -79,11 +81,12 @@ ocaml_toolchain_adapter(
     instrumented_runtime = "@ocaml//runtime:libcamlruni.a",
     pic_runtime          = "@ocaml//runtime:libcamlrun_pic.a",
     shared_runtime       = "@ocaml//runtime:libcamlrun_shared.so",
+    vmlibs               = "@stublibs//lib/stublibs",
+    vmlibs_path          = "@stublibs//lib/stublibs:path",
 
     # vmruntime              = "@ocaml//bin:ocamlrun",
     # vmruntime_debug        = "@ocaml//bin:ocamlrund",
     # vmruntime_instrumented = "@ocaml//bin:ocamlruni",
-    # vmlibs                 = "@stublibs//lib/stublibs",
 )
 
 ########################
@@ -105,11 +108,12 @@ ocaml_toolchain_adapter(
     instrumented_runtime = "@ocaml//runtime:libcamlruni.a",
     pic_runtime          = "@ocaml//runtime:libcamlrun_pic.a",
     shared_runtime       = "@ocaml//runtime:libcamlrun_shared.so",
+    vmlibs               = "@stublibs//lib/stublibs",
+    vmlibs_path          = "@stublibs//lib/stublibs:path",
 
     # vmruntime              = "@ocaml//bin:ocamlrun",
     # vmruntime_debug        = "@ocaml//bin:ocamlrund",
     # vmruntime_instrumented = "@ocaml//bin:ocamlruni",
-    # vmlibs                 = "@stublibs//lib/stublibs",
 )
 
 ########################
@@ -131,11 +135,12 @@ ocaml_toolchain_adapter(
     instrumented_runtime = "@ocaml//runtime:libasmruni.a",
     pic_runtime          = "@ocaml//runtime:libasmrun_pic.a",
     shared_runtime       = "@ocaml//runtime:libasmrun_shared.so",
+    vmlibs               = "@stublibs//lib/stublibs",
+    vmlibs_path          = "@stublibs//lib/stublibs:path",
 
     # vmruntime              = "@ocaml//bin:ocamlrun",
     # vmruntime_debug        = "@ocaml//bin:ocamlrund",
     # vmruntime_instrumented = "@ocaml//bin:ocamlruni",
-    # vmlibs                 = "@stublibs//lib/stublibs",
 )
 
 ocaml_toolchain_adapter(
@@ -156,9 +161,10 @@ ocaml_toolchain_adapter(
     instrumented_runtime = "@ocaml//runtime:libasmruni.a",
     pic_runtime          = "@ocaml//runtime:libasmrun_pic.a",
     shared_runtime       = "@ocaml//runtime:libasmrun_shared.so",
+    vmlibs               = "@stublibs//lib/stublibs",
+    vmlibs_path          = "@stublibs//lib/stublibs:path",
 
     # vmruntime              = "@ocaml//bin:ocamlrun",
     # vmruntime_debug        = "@ocaml//bin:ocamlrund",
     # vmruntime_instrumented = "@ocaml//bin:ocamlruni",
-    # vmlibs                 = "@stublibs//lib/stublibs",
 )

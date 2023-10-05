@@ -504,8 +504,8 @@ void emit_ocaml_stublibs(char *switch_pfx,
 
     fprintf(ostream, "filegroup(\n");
     fprintf(ostream, "    name = \"stublibs\",\n");
-    fprintf(ostream, "    srcs = glob([\"**\"]),\n");
-    fprintf(ostream, "    visibility = [\"//visibility:public\"]\n");
+    fprintf(ostream, "    srcs = glob([\"dll*\"]),\n");
+    fprintf(ostream, "    data = glob([\"dll*\"]),\n");
     fprintf(ostream, ")\n");
     fclose(ostream);
     if (verbosity > log_writes)
@@ -677,6 +677,10 @@ void emit_lib_stublibs_pkg(UT_string *registry,
             default_compat);
     fprintf(ostream, ")\n");
     fprintf(ostream, "\n");
+
+    fprintf(ostream,
+            "bazel_dep(name = \"bazel_skylib\", version = \"%s\")\n", skylib_version);
+
     fclose(ostream);
     if (verbosity > log_writes)
         fprintf(INFOFD, GRN "INFO" CRESET
@@ -709,11 +713,26 @@ void emit_lib_stublibs_pkg(UT_string *registry,
         exit(EXIT_FAILURE);
     }
     fprintf(ostream, "# generated file - DO NOT EDIT\n\n");
-    fprintf(ostream, "exports_files(glob([\"**\"]))\n");
+
+    fprintf(ostream,
+            "load(\"@bazel_skylib//rules:common_settings.bzl\",\n");
+    fprintf(ostream, "     \"string_setting\")\n\n");
+
+    fprintf(ostream,
+            "package(default_visibility=[\"//visibility:public\"])\n\n");
+
+    fprintf(ostream, "exports_files(glob([\"**\"]))\n\n");
+
+    fprintf(ostream,
+            "string_setting(name = \"path\",\n");
+    fprintf(ostream,
+            "               build_setting_default = \"%s/stublibs/lib/stublibs\")\n\n",
+            coswitch_lib  // use switch_lib?
+            );
+
     fprintf(ostream, "filegroup(\n");
     fprintf(ostream, "    name = \"stublibs\",\n");
     fprintf(ostream, "    srcs = glob([\"**\"]),\n");
-    fprintf(ostream, "    visibility = [\"//visibility:public\"]\n");
     fprintf(ostream, ")\n");
     fclose(ostream);
     if (verbosity > log_writes) {

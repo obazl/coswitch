@@ -52,6 +52,8 @@ void _emit_reg_rec(UT_string *reg_file, char *pkg_name)
     } else {
         fprintf(ostream,
                 "bazel_dep(name = \"ocaml\", version = \"%s\")\n", "0.0.0");
+        fprintf(ostream,
+                "bazel_dep(name = \"bazel_skylib\", version = \"%s\")\n", skylib_version);
     }
 
     fprintf(ostream, "\n");
