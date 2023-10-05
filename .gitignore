@@ -3,7 +3,7 @@
 .bazelversion
 .bazel
 bazel-*
-*.tgz
+*.gz
 log.*
 
 # Prerequisites
