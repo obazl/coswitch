@@ -2939,7 +2939,7 @@ EXPORT void emit_module_file(UT_string *module_file,
     fprintf(ostream, "\n");
 
     fprintf(ostream, "bazel_dep(name = \"rules_ocaml\",");
-    fprintf(ostream, " version = \"1.0.0\")\n");
+    fprintf(ostream, " version = \"%s\")\n", rules_ocaml_version);
     fprintf(ostream, "bazel_dep(name = \"ocaml\", # %s\n",
             compiler_version);
     fprintf(ostream, "          version = \"0.0.0\")\n");

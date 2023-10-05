@@ -69,6 +69,8 @@ struct paths_s {
 char *default_version = "0.0.0";
 int   default_compat  = 0;
 char *bazel_compat    = "6.0.0";
+char *rules_ocaml_version = "1.0.0";
+char *skylib_version      = "1.4.2";
 
 int log_writes = 1; // threshhold for logging all writes
 int log_symlinks = 2;

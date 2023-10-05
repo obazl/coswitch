@@ -7,8 +7,6 @@
 #include "registry.h"
 
 const char *platforms_version   = "0.0.7";
-const char *skylib_version      = "1.4.2";
-const char *rules_ocaml_version = "1.0.0";
 
 void _emit_reg_rec(UT_string *reg_file, char *pkg_name)
 {
@@ -50,6 +48,8 @@ void _emit_reg_rec(UT_string *reg_file, char *pkg_name)
                 "bazel_dep(name = \"stublibs\", version = \"%s\")\n",
                 default_version);
     } else {
+        fprintf(ostream,
+                "bazel_dep(name = \"rules_ocaml\", version = \"%s\")\n", rules_ocaml_version);
         fprintf(ostream,
                 "bazel_dep(name = \"ocaml\", version = \"%s\")\n", "0.0.0");
         fprintf(ostream,

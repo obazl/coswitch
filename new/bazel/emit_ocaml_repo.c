@@ -678,6 +678,12 @@ void emit_lib_stublibs_pkg(UT_string *registry,
     fprintf(ostream, ")\n");
     fprintf(ostream, "\n");
 
+    fprintf(ostream, "bazel_dep(name = \"rules_ocaml\",");
+    fprintf(ostream, " version = \"%s\")\n", rules_ocaml_version);
+
+    fprintf(ostream,
+            "bazel_dep(name = \"ocaml\", version = \"%s\")\n", "0.0.0");
+
     fprintf(ostream,
             "bazel_dep(name = \"bazel_skylib\", version = \"%s\")\n", skylib_version);
 
