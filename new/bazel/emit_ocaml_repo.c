@@ -42,7 +42,7 @@ extern UT_string *opam_ocaml_version;
 /* extern UT_string *opam_switch_lib; */
 /* extern UT_string *coswitch_runfiles_root; */
 
-#if defined(TRACING)
+#if defined(DEBUG_fastbuild)
 bool coswitch_debug_symlinks = false;
 #endif
 
@@ -96,7 +96,7 @@ void _emit_toplevel(UT_string *templates,
     fprintf(ostream, "%s", utstring_body(content));
     fclose(ostream);
     if (verbosity > log_writes)
-        log_info("wrote: %s", utstring_body(dst_file));
+        LOG_INFO(0, "wrote: %s", utstring_body(dst_file));
 
     utstring_renew(dst_file);
     utstring_printf(dst_file, "%s/WORKSPACE.bazel",
@@ -130,8 +130,8 @@ void _emit_toplevel(UT_string *templates,
                     utstring_body(templates),
                     template);
 
-    /* log_debug("cp src: %s, dst: %s", */
-    /*           utstring_body(src_file), utstring_body(dst_file)); */
+    LOG_DEBUG(2, "cp src: %s, dst: %s",
+              utstring_body(src_file), utstring_body(dst_file));
     copy_buildfile(utstring_body(src_file), dst_file);
     TRACE_EXIT;
 }
@@ -166,9 +166,9 @@ void emit_ocaml_stdlib_pkg(char *runfiles,
                     switch_lib);
     int rc = access(utstring_body(stdlib_dir), F_OK);
     if (rc != 0) {
-#if defined(TRACING)
+#if defined(DEBUG_fastbuild)
         /* if (coswitch_trace) */
-        log_warn(YEL "NOT FOUND: %s",
+        LOG_WARN(0, YEL "NOT FOUND: %s",
                  utstring_body(stdlib_dir));
 #endif
         utstring_new(stdlib_dir);
@@ -177,22 +177,22 @@ void emit_ocaml_stdlib_pkg(char *runfiles,
                         switch_lib);
         int rc = access(utstring_body(stdlib_dir), F_OK);
         if (rc != 0) {
-#if defined(TRACING)
+#if defined(DEBUG_fastbuild)
             /* if (coswitch_trace) */
-            log_warn(YEL "NOT FOUND: %s",
+            LOG_WARN(0, YEL "NOT FOUND: %s",
                      utstring_body(stdlib_dir));
 #endif
             utstring_free(stdlib_dir);
             return;
         } else {
-#if defined(TRACING)
-            log_warn(YEL "FOUND: %s", utstring_body(stdlib_dir));
+#if defined(DEBUG_fastbuild)
+            LOG_WARN(0, YEL "FOUND: %s", utstring_body(stdlib_dir));
 #endif
             add_toplevel = true;
         }
-/* #if defined(TRACING) */
+/* #if defined(DEBUG_fastbuild) */
 /*     } else { */
-/*         log_warn(YEL "FOUND: %s", utstring_body(stdlib_dir)); */
+/*         LOG_WARN(0, YEL "FOUND: %s", utstring_body(stdlib_dir)); */
 /* #endif */
     }
 
@@ -220,6 +220,8 @@ void emit_ocaml_stdlib_pkg(char *runfiles,
     mkdir_r(utstring_body(dst_dir));
     utstring_printf(dst_file, "%s/BUILD.bazel",
                     utstring_body(dst_dir));
+    LOG_DEBUG(2, "cp src: %s, dst: %s",
+              utstring_body(src_file), utstring_body(dst_file));
     copy_buildfile(utstring_body(src_file), dst_file);
 
     if (add_toplevel) {
@@ -280,8 +282,8 @@ void emit_ocaml_stdlib_pkg(char *runfiles,
 void _symlink_ocaml_stdlib(UT_string *stdlib_srcdir, char *tgtdir)
 {
     TRACE_ENTRY;
-    /* log_debug("stdlib_srcdir: %s", utstring_body(stdlib_srcdir)); */
-    /* log_debug("tgtdir: %s", tgtdir); */
+    /* LOG_DEBUG(0, "stdlib_srcdir: %s", utstring_body(stdlib_srcdir)); */
+    /* LOG_DEBUG(0, "tgtdir: %s", tgtdir); */
 
     /* UT_string *opamdir; */
     /* utstring_new(opamdir); */
@@ -317,7 +319,7 @@ void _symlink_ocaml_stdlib(UT_string *stdlib_srcdir, char *tgtdir)
             utstring_renew(dst);
             utstring_printf(dst, "%s/%s",
                             tgtdir, direntry->d_name);
-            /* log_debug("symlinking %s to %s", */
+            /* LOG_DEBUG(0, "symlinking %s to %s", */
             /*           utstring_body(src), */
             /*           utstring_body(dst)); */
             rc = symlink(utstring_body(src),
@@ -372,6 +374,8 @@ void emit_ocaml_runtime_pkg(char *runfiles,
                     "%s/BUILD.bazel",
                     utstring_body(dst_dir));
 
+    LOG_DEBUG(2, "cp src: %s, dst: %s",
+              utstring_body(src_file), utstring_body(dst_file));
     copy_buildfile(utstring_body(src_file), dst_file);
 
     /* ******************************** */
@@ -389,6 +393,8 @@ void emit_ocaml_runtime_pkg(char *runfiles,
     utstring_printf(dst_file,
                     "%s/BUILD.bazel",
                     utstring_body(dst_dir));
+    LOG_DEBUG(2, "cp src: %s, dst: %s",
+              utstring_body(src_file), utstring_body(dst_file));
     copy_buildfile(utstring_body(src_file), dst_file);
 
     /* ******************************** */
@@ -405,6 +411,8 @@ void emit_ocaml_runtime_pkg(char *runfiles,
     utstring_printf(dst_file,
                     "%s/BUILD.bazel",
                     utstring_body(dst_dir));
+    LOG_DEBUG(2, "cp src: %s, dst: %s",
+              utstring_body(src_file), utstring_body(dst_file));
     copy_buildfile(utstring_body(src_file), dst_file);
 
     utstring_free(src_file);
@@ -416,8 +424,8 @@ void emit_ocaml_runtime_pkg(char *runfiles,
 void _symlink_ocaml_runtime(char *switch_lib, char *tgtdir)
 {
     TRACE_ENTRY;
-    log_debug("rt switchlib: %s", switch_lib);
-    log_debug("rt tgtdir: %s", tgtdir);
+    LOG_DEBUG(0, "rt switchlib: %s", switch_lib);
+    LOG_DEBUG(0, "rt tgtdir: %s", tgtdir);
     UT_string *opamdir;
     utstring_new(opamdir);
     utstring_printf(opamdir, "%s/ocaml",
@@ -440,7 +448,7 @@ void _symlink_ocaml_runtime(char *switch_lib, char *tgtdir)
 
     struct dirent *direntry;
     while ((direntry = readdir(d)) != NULL) {
-        /* log_debug("DIRENT"); */
+        /* LOG_DEBUG(0, "DIRENT"); */
         if(direntry->d_type==DT_REG){
             if (strncmp("stdlib", direntry->d_name, 6) != 0)
                 if (strncmp("std_exit", direntry->d_name, 8) != 0)
@@ -540,9 +548,9 @@ void _emit_ocaml_stublibs_symlinks(char *switch_pfx,
                     /* tgtdir); */
     mkdir_r(utstring_body(dst_dir));
 
-#if defined(TRACING)
-    log_debug("stublibs src_dir: %s\n", utstring_body(src_dir));
-    log_debug("stublibs dst_dir: %s\n", utstring_body(dst_dir));
+#if defined(DEBUG_fastbuild)
+    LOG_DEBUG(0, "stublibs src_dir: %s\n", utstring_body(src_dir));
+    LOG_DEBUG(0, "stublibs dst_dir: %s\n", utstring_body(dst_dir));
 #endif
 
     UT_string *src_file;
@@ -551,8 +559,8 @@ void _emit_ocaml_stublibs_symlinks(char *switch_pfx,
     utstring_new(dst_file);
     int rc;
 
-#if defined(TRACING)
-    log_debug("opening src_dir for read: %s\n",
+#if defined(DEBUG_fastbuild)
+    LOG_DEBUG(0, "opening src_dir for read: %s\n",
               utstring_body(src_dir));
 #endif
     DIR *srcd = opendir(utstring_body(src_dir));
@@ -569,9 +577,9 @@ void _emit_ocaml_stublibs_symlinks(char *switch_pfx,
     struct dirent *direntry;
     while ((direntry = readdir(srcd)) != NULL) {
         //Condition to check regular file.
-#if defined(TRACING)
+#if defined(DEBUG_fastbuild)
         if (coswitch_debug)
-            log_debug("stublib: %s, type %d",
+            LOG_DEBUG(0, "stublib: %s, type %d",
                       direntry->d_name, direntry->d_type);
 #endif
         if( (direntry->d_type==DT_REG)
@@ -642,9 +650,9 @@ void emit_lib_stublibs_pkg(UT_string *registry,
                     switch_stublibs);
     int rc = access(utstring_body(switch_stublibs_dir), F_OK);
     if (rc != 0) {
-#if defined(TRACING)
+#if defined(DEBUG_fastbuild)
         /* if (coswitch_trace) */
-        log_warn(YEL "no stublibs dir found: %s",
+        LOG_WARN(0, YEL "no stublibs dir found: %s",
                  utstring_body(switch_stublibs_dir));
 #endif
         return;
@@ -771,8 +779,8 @@ void _emit_lib_stublibs_symlinks(char *switch_stublibs,
                     /* utstring_body(opam_switch_lib), */
                     /* "/stublibs"); // _dir); */
 
-    /* log_debug("libstublibs src_dir: %s\n", utstring_body(src_dir)); */
-    /* log_debug("libstublibs dst_dir: %s\n", utstring_body(dst_dir)); */
+    /* LOG_DEBUG(0, "libstublibs src_dir: %s\n", utstring_body(src_dir)); */
+    /* LOG_DEBUG(0, "libstublibs dst_dir: %s\n", utstring_body(dst_dir)); */
 
     UT_string *src;
     utstring_new(src);
@@ -780,8 +788,8 @@ void _emit_lib_stublibs_symlinks(char *switch_stublibs,
     utstring_new(dst);
     int rc;
 
-#if defined(TRACING)
-    log_debug("opening src_dir for read: %s",
+#if defined(DEBUG_fastbuild)
+    LOG_DEBUG(0, "opening src_dir for read: %s",
               utstring_body(src_dir));
 #endif
     DIR *srcd = opendir(utstring_body(src_dir));
@@ -796,15 +804,15 @@ void _emit_lib_stublibs_symlinks(char *switch_stublibs,
         /* example, see topkg and topkg-care */
         return;
     /* } else { */
-    /*     log_debug("XXXXXXXXXXXXXXXX"); */
+    /*     LOG_DEBUG(0, "XXXXXXXXXXXXXXXX"); */
     }
 
     struct dirent *direntry;
     while ((direntry = readdir(srcd)) != NULL) {
         //Condition to check regular file.
-#if defined(TRACING)
+#if defined(DEBUG_fastbuild)
         /* if (coswitch_debug_symlinks) { */
-            log_debug("stublib: %s, type %d",
+            LOG_DEBUG(0, "stublib: %s, type %d",
                       direntry->d_name, direntry->d_type);
         /* } */
 #endif
@@ -822,9 +830,9 @@ void _emit_lib_stublibs_symlinks(char *switch_stublibs,
             utstring_printf(dst, "%s/%s",
                             utstring_body(dst_dir), direntry->d_name);
 
-#if defined(TRACING)
+#if defined(DEBUG_fastbuild)
             /* if (coswitch_debug_symlinks) { */
-                log_debug("stublibs: symlinking %s to %s",
+                LOG_DEBUG(0, "stublibs: symlinking %s to %s",
                           utstring_body(src),
                           utstring_body(dst));
             /* } */
@@ -876,7 +884,7 @@ void emit_ocaml_platform_buildfiles(UT_string *templates,
     UT_string *dst_file;
     utstring_new(dst_file);
 
-    /* log_debug("CWD: %s", getcwd(NULL,0)); */
+    /* LOG_DEBUG(0, "CWD: %s", getcwd(NULL,0)); */
 
     utstring_printf(src_file, "%s/%s",
                     utstring_body(templates),
@@ -887,6 +895,8 @@ void emit_ocaml_platform_buildfiles(UT_string *templates,
                     coswitch_lib);
     mkdir_r(utstring_body(dst_file));
     utstring_printf(dst_file, "/BUILD.bazel");
+    LOG_DEBUG(2, "cp src: %s, dst: %s",
+              utstring_body(src_file), utstring_body(dst_file));
     copy_buildfile(utstring_body(src_file), dst_file);
 
     /* **************** */
@@ -900,6 +910,8 @@ void emit_ocaml_platform_buildfiles(UT_string *templates,
     utstring_printf(dst_file, "%s/ocaml/platform/arch", coswitch_lib);
     mkdir_r(utstring_body(dst_file));
     utstring_printf(dst_file, "/BUILD.bazel");
+    LOG_DEBUG(2, "cp src: %s, dst: %s",
+              utstring_body(src_file), utstring_body(dst_file));
     copy_buildfile(utstring_body(src_file), dst_file);
 
     /* **************** */
@@ -912,6 +924,8 @@ void emit_ocaml_platform_buildfiles(UT_string *templates,
     utstring_printf(dst_file, "%s/ocaml/platform/executor", coswitch_lib);
     mkdir_r(utstring_body(dst_file));
     utstring_printf(dst_file, "/BUILD.bazel");
+    LOG_DEBUG(2, "cp src: %s, dst: %s",
+              utstring_body(src_file), utstring_body(dst_file));
     copy_buildfile(utstring_body(src_file), dst_file);
 
     /* **************** */
@@ -924,6 +938,8 @@ void emit_ocaml_platform_buildfiles(UT_string *templates,
     utstring_printf(dst_file, "%s/ocaml/platform/emitter", coswitch_lib);
     mkdir_r(utstring_body(dst_file));
     utstring_printf(dst_file, "/BUILD.bazel");
+    LOG_DEBUG(2, "cp src: %s, dst: %s",
+              utstring_body(src_file), utstring_body(dst_file));
     copy_buildfile(utstring_body(src_file), dst_file);
 
     utstring_free(templates);
@@ -954,6 +970,8 @@ void emit_ocaml_toolchain_buildfiles(char *runfiles,
                     coswitch_lib);
     mkdir_r(utstring_body(dst_file));
     utstring_printf(dst_file, "/BUILD.bazel");
+    LOG_DEBUG(2, "cp src: %s, dst: %s",
+              utstring_body(src_file), utstring_body(dst_file));
     copy_buildfile(utstring_body(src_file), dst_file);
 
     utstring_renew(src_file);
@@ -966,6 +984,8 @@ void emit_ocaml_toolchain_buildfiles(char *runfiles,
                     coswitch_lib);
     mkdir_r(utstring_body(dst_file));
     utstring_printf(dst_file, "/BUILD.bazel");
+    LOG_DEBUG(2, "cp src: %s, dst: %s",
+              utstring_body(src_file), utstring_body(dst_file));
     copy_buildfile(utstring_body(src_file), dst_file);
 
     utstring_renew(src_file);
@@ -978,6 +998,8 @@ void emit_ocaml_toolchain_buildfiles(char *runfiles,
                     coswitch_lib);
     mkdir_r(utstring_body(dst_file));
     utstring_printf(dst_file, "/BUILD.bazel");
+    LOG_DEBUG(2, "cp src: %s, dst: %s",
+              utstring_body(src_file), utstring_body(dst_file));
     copy_buildfile(utstring_body(src_file), dst_file);
 
     utstring_renew(src_file);
@@ -990,6 +1012,8 @@ void emit_ocaml_toolchain_buildfiles(char *runfiles,
                     coswitch_lib);
     mkdir_r(utstring_body(dst_file));
     utstring_printf(dst_file, "/BUILD.bazel");
+    LOG_DEBUG(2, "cp src: %s, dst: %s",
+              utstring_body(src_file), utstring_body(dst_file));
     copy_buildfile(utstring_body(src_file), dst_file);
 
     utstring_renew(src_file);
@@ -1002,6 +1026,8 @@ void emit_ocaml_toolchain_buildfiles(char *runfiles,
                     coswitch_lib);
     mkdir_r(utstring_body(dst_file));
     utstring_printf(dst_file, "/BUILD.bazel");
+    LOG_DEBUG(2, "cp src: %s, dst: %s",
+              utstring_body(src_file), utstring_body(dst_file));
     copy_buildfile(utstring_body(src_file), dst_file);
 
     /* toolchain options */
@@ -1015,6 +1041,8 @@ void emit_ocaml_toolchain_buildfiles(char *runfiles,
                     coswitch_lib);
     mkdir_r(utstring_body(dst_file));
     utstring_printf(dst_file, "/BUILD.bazel");
+    LOG_DEBUG(2, "cp src: %s, dst: %s",
+              utstring_body(src_file), utstring_body(dst_file));
     copy_buildfile(utstring_body(src_file), dst_file);
 
     /* toolchain adapters */
@@ -1028,6 +1056,8 @@ void emit_ocaml_toolchain_buildfiles(char *runfiles,
                     coswitch_lib);
     mkdir_r(utstring_body(dst_file));
     utstring_printf(dst_file, "/BUILD.bazel");
+    LOG_DEBUG(2, "cp src: %s, dst: %s",
+              utstring_body(src_file), utstring_body(dst_file));
     copy_buildfile(utstring_body(src_file), dst_file);
     //TODO: mustache support
     /* _process_mustache("toolchain/adapters/local.BUILD.mustache", dst_file); */
@@ -1042,6 +1072,8 @@ void emit_ocaml_toolchain_buildfiles(char *runfiles,
                     coswitch_lib);
     mkdir_r(utstring_body(dst_file));
     utstring_printf(dst_file, "/BUILD.bazel");
+    LOG_DEBUG(2, "cp src: %s, dst: %s",
+              utstring_body(src_file), utstring_body(dst_file));
     copy_buildfile(utstring_body(src_file), dst_file);
 
     utstring_renew(src_file);
@@ -1054,6 +1086,8 @@ void emit_ocaml_toolchain_buildfiles(char *runfiles,
                     coswitch_lib);
     mkdir_r(utstring_body(dst_file));
     utstring_printf(dst_file, "/BUILD.bazel");
+    LOG_DEBUG(2, "cp src: %s, dst: %s",
+              utstring_body(src_file), utstring_body(dst_file));
     copy_buildfile(utstring_body(src_file), dst_file);
 
     utstring_renew(src_file);
@@ -1066,6 +1100,8 @@ void emit_ocaml_toolchain_buildfiles(char *runfiles,
                     coswitch_lib);
     mkdir_r(utstring_body(dst_file));
     utstring_printf(dst_file, "/BUILD.bazel");
+    LOG_DEBUG(2, "cp src: %s, dst: %s",
+              utstring_body(src_file), utstring_body(dst_file));
     copy_buildfile(utstring_body(src_file), dst_file);
 
     utstring_renew(src_file);
@@ -1078,6 +1114,8 @@ void emit_ocaml_toolchain_buildfiles(char *runfiles,
                     coswitch_lib);
     mkdir_r(utstring_body(dst_file));
     utstring_printf(dst_file, "/BUILD.bazel");
+    LOG_DEBUG(2, "cp src: %s, dst: %s",
+              utstring_body(src_file), utstring_body(dst_file));
     copy_buildfile(utstring_body(src_file), dst_file);
 
     utstring_free(templates);
@@ -1134,10 +1172,10 @@ void _emit_ocaml_bin_symlinks(char *opam_switch_pfx,
 
     mkdir_r(utstring_body(dst_dir));
 
-/* #if defined(TRACING) */
+/* #if defined(DEBUG_fastbuild) */
 /*     /\* if (coswitch_debug) { *\/ */
-/*     log_debug("opam pfx: %s", opam_switch_pfx); */
-/*         log_debug("dst_dir: %s", utstring_body(dst_dir)); */
+/*     LOG_DEBUG(0, "opam pfx: %s", opam_switch_pfx); */
+/*         LOG_DEBUG(0, "dst_dir: %s", utstring_body(dst_dir)); */
 /*     /\* } *\/ */
 /* #endif */
 
@@ -1150,9 +1188,9 @@ void _emit_ocaml_bin_symlinks(char *opam_switch_pfx,
     UT_string *opam_switch_bin;
     utstring_new(opam_switch_bin);
     utstring_printf(opam_switch_bin, "%s/bin", opam_switch_pfx);
-#if defined(TRACING)
+#if defined(DEBUG_fastbuild)
     if (verbosity > 3)
-        log_debug("opening src_dir for read: %s",
+        LOG_DEBUG(0, "opening src_dir for read: %s",
                   utstring_body(opam_switch_bin));
 #endif
     DIR *srcd = opendir(utstring_body(opam_switch_bin));
@@ -1236,9 +1274,9 @@ void _emit_ocaml_bin_symlinks(char *opam_switch_pfx,
 /*         return; */
 /*     } */
 
-/* #if defined(TRACING) */
+/* #if defined(DEBUG_fastbuild) */
 /*     if (coswitch_debug) { */
-/*         log_debug("c_libs: symlinking %s to %s\n", */
+/*         LOG_DEBUG(0, "c_libs: symlinking %s to %s\n", */
 /*                   utstring_body(src), */
 /*                   utstring_body(to_file)); */
 /*     } */
@@ -1289,17 +1327,17 @@ void emit_ocaml_bigarray_pkg(char *runfiles,
                     switch_lib);
     int rc = access(utstring_body(bigarray_dir), F_OK);
     if (rc != 0) {
-#if defined(TRACING)
+#if defined(DEBUG_fastbuild)
         /* if (coswitch_trace) */
-        log_warn(YEL "NOT FOUND: %s",
+        LOG_WARN(0, YEL "NOT FOUND: %s",
                  utstring_body(bigarray_dir));
 #endif
         utstring_free(bigarray_dir);
         // v >= 5.0.0 does not include any bigarray archive
         return;
-/* #if defined(TRACING) */
+/* #if defined(DEBUG_fastbuild) */
 /*     } else { */
-/*         log_warn(YEL "FOUND: %s", utstring_body(bigarray_dir)); */
+/*         LOG_WARN(0, YEL "FOUND: %s", utstring_body(bigarray_dir)); */
 /* #endif */
     }
 
@@ -1325,6 +1363,8 @@ void emit_ocaml_bigarray_pkg(char *runfiles,
     mkdir_r(utstring_body(dst_dir));
     utstring_printf(dst_file, "%s/BUILD.bazel",
                     utstring_body(dst_dir));
+    LOG_DEBUG(2, "cp src: %s, dst: %s",
+              utstring_body(src_file), utstring_body(dst_file));
     copy_buildfile(utstring_body(src_file), dst_file);
 
     // if we found <switch>/lib/bigarray,
@@ -1348,10 +1388,10 @@ void _symlink_ocaml_bigarray(UT_string *bigarray_dir,
                              char *tgtdir)
 {
     TRACE_ENTRY;
-/* #if defined(TRACING) */
+/* #if defined(DEBUG_fastbuild) */
 /*     /\* if (coswitch_debug_symlinks) *\/ */
 /*     if (verbosity > 2) { */
-/*         log_debug("src: %s, dst: %s", */
+/*         LOG_DEBUG(0, "src: %s, dst: %s", */
 /*                   utstring_body(bigarray_dir), tgtdir); */
 /*     } */
 /* #endif */
@@ -1392,7 +1432,7 @@ void _symlink_ocaml_bigarray(UT_string *bigarray_dir,
             utstring_renew(dst);
             utstring_printf(dst, "%s/%s",
                             tgtdir, direntry->d_name);
-            /* log_debug("symlinking %s to %s", */
+            /* LOG_DEBUG(0, "symlinking %s to %s", */
             /*        utstring_body(src), */
             /*        utstring_body(dst)); */
             errno = 0;
@@ -1441,6 +1481,8 @@ void emit_compiler_libs_pkg(char *runfiles, char *coswitch_lib)
                     coswitch_lib);
     mkdir_r(utstring_body(dst_file));
     utstring_printf(dst_file, "/BUILD.bazel");
+    LOG_DEBUG(2, "cp src: %s, dst: %s",
+              utstring_body(src_file), utstring_body(dst_file));
     copy_buildfile(utstring_body(src_file), dst_file);
 
     utstring_renew(src_file);
@@ -1453,6 +1495,8 @@ void emit_compiler_libs_pkg(char *runfiles, char *coswitch_lib)
                     coswitch_lib);
     mkdir_r(utstring_body(dst_file));
     utstring_printf(dst_file, "/BUILD.bazel");
+    LOG_DEBUG(2, "cp src: %s, dst: %s",
+              utstring_body(src_file), utstring_body(dst_file));
     copy_buildfile(utstring_body(src_file), dst_file);
 
     utstring_renew(src_file);
@@ -1464,6 +1508,8 @@ void emit_compiler_libs_pkg(char *runfiles, char *coswitch_lib)
                     coswitch_lib);
     mkdir_r(utstring_body(dst_file));
     utstring_printf(dst_file, "/BUILD.bazel");
+    LOG_DEBUG(2, "cp src: %s, dst: %s",
+              utstring_body(src_file), utstring_body(dst_file));
     copy_buildfile(utstring_body(src_file), dst_file);
 
     utstring_renew(src_file);
@@ -1475,6 +1521,8 @@ void emit_compiler_libs_pkg(char *runfiles, char *coswitch_lib)
                     coswitch_lib);
     mkdir_r(utstring_body(dst_file));
     utstring_printf(dst_file, "/BUILD.bazel");
+    LOG_DEBUG(2, "cp src: %s, dst: %s",
+              utstring_body(src_file), utstring_body(dst_file));
     copy_buildfile(utstring_body(src_file), dst_file);
 
     utstring_renew(src_file);
@@ -1486,6 +1534,8 @@ void emit_compiler_libs_pkg(char *runfiles, char *coswitch_lib)
                     coswitch_lib);
     mkdir_r(utstring_body(dst_file));
     utstring_printf(dst_file, "/BUILD.bazel");
+    LOG_DEBUG(2, "cp src: %s, dst: %s",
+              utstring_body(src_file), utstring_body(dst_file));
     copy_buildfile(utstring_body(src_file), dst_file);
 
     utstring_free(src_file);
@@ -1522,9 +1572,11 @@ void emit_ocaml_compiler_libs_pkg(char *runfiles,
                     coswitch_lib);
     mkdir_r(utstring_body(dst_file));
     utstring_printf(dst_file, "/BUILD.bazel");
-    /* log_debug("cp src: %s, dst: %s", */
+    /* LOG_DEBUG(2, "cp src: %s, dst: %s", */
     /*           utstring_body(src_file), */
     /*           utstring_body(dst_file)); */
+    LOG_DEBUG(2, "cp src: %s, dst: %s",
+              utstring_body(src_file), utstring_body(dst_file));
     copy_buildfile(utstring_body(src_file), dst_file);
 
     utstring_renew(src_file);
@@ -1537,6 +1589,8 @@ void emit_ocaml_compiler_libs_pkg(char *runfiles,
                     coswitch_lib);
     mkdir_r(utstring_body(dst_file));
     utstring_printf(dst_file, "/BUILD.bazel");
+    LOG_DEBUG(2, "cp src: %s, dst: %s",
+              utstring_body(src_file), utstring_body(dst_file));
     copy_buildfile(utstring_body(src_file), dst_file);
 
     utstring_renew(src_file);
@@ -1549,6 +1603,8 @@ void emit_ocaml_compiler_libs_pkg(char *runfiles,
                     coswitch_lib);
     mkdir_r(utstring_body(dst_file));
     utstring_printf(dst_file, "/BUILD.bazel");
+    LOG_DEBUG(2, "cp src: %s, dst: %s",
+              utstring_body(src_file), utstring_body(dst_file));
     copy_buildfile(utstring_body(src_file), dst_file);
 
     utstring_renew(src_file);
@@ -1561,6 +1617,8 @@ void emit_ocaml_compiler_libs_pkg(char *runfiles,
                     coswitch_lib);
     mkdir_r(utstring_body(dst_file));
     utstring_printf(dst_file, "/BUILD.bazel");
+    LOG_DEBUG(2, "cp src: %s, dst: %s",
+              utstring_body(src_file), utstring_body(dst_file));
     copy_buildfile(utstring_body(src_file), dst_file);
 
     utstring_renew(src_file);
@@ -1572,6 +1630,8 @@ void emit_ocaml_compiler_libs_pkg(char *runfiles,
                     coswitch_lib);
     mkdir_r(utstring_body(dst_file));
     utstring_printf(dst_file, "/BUILD.bazel");
+    LOG_DEBUG(2, "cp src: %s, dst: %s",
+              utstring_body(src_file), utstring_body(dst_file));
     copy_buildfile(utstring_body(src_file), dst_file);
 
     utstring_renew(dst_file);
@@ -1592,8 +1652,8 @@ void _symlink_ocaml_compiler_libs(char *switch_lib,
                                   /* char *tgtdir) */
 {
     TRACE_ENTRY;
-#if defined(TRACING)
-    /* log_debug("src: %s, dst: %s, tgt: %s", */
+#if defined(DEBUG_fastbuild)
+    /* LOG_DEBUG(0, "src: %s, dst: %s, tgt: %s", */
     /*           switch_lib, coswitch_lib); //, tgtdir); */
 #endif
     UT_string *opamdir;
@@ -1601,7 +1661,7 @@ void _symlink_ocaml_compiler_libs(char *switch_lib,
     utstring_printf(opamdir, "%s/ocaml/compiler-libs",
                     switch_lib);
                     /* utstring_body(opam_switch_lib)); */
-    /* log_debug("OPAM DIR src: %s", utstring_body(opamdir)); */
+    /* LOG_DEBUG(0, "OPAM DIR src: %s", utstring_body(opamdir)); */
     UT_string *src;
     utstring_new(src);
     UT_string *dst;
@@ -1631,7 +1691,7 @@ void _symlink_ocaml_compiler_libs(char *switch_lib,
                             //tgtdir,
                             coswitch_lib,
                             direntry->d_name);
-            /* log_debug("symlinking %s to %s", */
+            /* LOG_DEBUG(0, "symlinking %s to %s", */
             /*           utstring_body(src), */
             /*           utstring_body(dst)); */
             rc = symlink(utstring_body(src),
@@ -1665,9 +1725,9 @@ void emit_ocaml_dynlink_pkg(char *runfiles,
                     switch_lib);
     int rc = access(utstring_body(dynlink_dir), F_OK);
     if (rc != 0) {
-#if defined(TRACING)
+#if defined(DEBUG_fastbuild)
         /* if (coswitch_trace) */
-        log_warn(YEL "NOT FOUND: %s",
+        LOG_WARN(0, YEL "NOT FOUND: %s",
                  utstring_body(dynlink_dir));
 #endif
         utstring_new(dynlink_dir);
@@ -1676,22 +1736,22 @@ void emit_ocaml_dynlink_pkg(char *runfiles,
                         switch_lib);
         int rc = access(utstring_body(dynlink_dir), F_OK);
         if (rc != 0) {
-#if defined(TRACING)
+#if defined(DEBUG_fastbuild)
             /* if (coswitch_trace) */
-            log_warn(YEL "NOT FOUND: %s",
+            LOG_WARN(0, YEL "NOT FOUND: %s",
                      utstring_body(dynlink_dir));
 #endif
             utstring_free(dynlink_dir);
             return;
         } else {
-#if defined(TRACING)
-            log_warn(YEL "FOUND: %s", utstring_body(dynlink_dir));
+#if defined(DEBUG_fastbuild)
+            LOG_WARN(0, YEL "FOUND: %s", utstring_body(dynlink_dir));
 #endif
             add_toplevel = true;
         }
-/* #if defined(TRACING) */
+/* #if defined(DEBUG_fastbuild) */
 /*     } else { */
-/*         log_warn(YEL "FOUND: %s", utstring_body(dynlink_dir)); */
+/*         LOG_WARN(0, YEL "FOUND: %s", utstring_body(dynlink_dir)); */
 /* #endif */
     }
 
@@ -1719,6 +1779,8 @@ void emit_ocaml_dynlink_pkg(char *runfiles,
     mkdir_r(utstring_body(dst_dir));
     utstring_printf(dst_file, "%s/BUILD.bazel",
                     utstring_body(dst_dir));
+    LOG_DEBUG(2, "cp src: %s, dst: %s",
+              utstring_body(src_file), utstring_body(dst_file));
     copy_buildfile(utstring_body(src_file), dst_file);
 
     if (add_toplevel) {
@@ -1753,9 +1815,9 @@ void emit_ocaml_dynlink_pkg(char *runfiles,
 void _symlink_ocaml_dynlink(UT_string *dynlink_dir, char *tgtdir)
 {
     TRACE_ENTRY;
-#if defined(TRACING)
+#if defined(DEBUG_fastbuild)
     if (verbosity > 2) {
-        log_debug("src: %s, dst: %s",
+        LOG_DEBUG(0, "src: %s, dst: %s",
                   utstring_body(dynlink_dir), tgtdir);
     }
 #endif
@@ -1775,7 +1837,7 @@ void _symlink_ocaml_dynlink(UT_string *dynlink_dir, char *tgtdir)
         return;
     /* } else { */
     /*     if (verbosity > 1) */
-    /*         log_debug("opened dir %s", utstring_body(dynlink_dir)); */
+    /*         LOG_DEBUG(0, "opened dir %s", utstring_body(dynlink_dir)); */
     }
 
     struct dirent *direntry;
@@ -1792,7 +1854,7 @@ void _symlink_ocaml_dynlink(UT_string *dynlink_dir, char *tgtdir)
             utstring_renew(dst);
             utstring_printf(dst, "%s/%s",
                             tgtdir, direntry->d_name);
-            /* log_debug("symlinking %s to %s", */
+            /* LOG_DEBUG(0, "symlinking %s to %s", */
             /*           utstring_body(src), */
             /*           utstring_body(dst)); */
             errno = 0;
@@ -1829,15 +1891,15 @@ void emit_ocaml_num_pkg(char *runfiles,
                     switch_lib);
     int rc = access(utstring_body(num_dir), F_OK);
     if (rc != 0) {
-#if defined(TRACING)
+#if defined(DEBUG_fastbuild)
         /* if (coswitch_trace) */
-        log_warn(YEL "NOT FOUND: %s",
+        LOG_WARN(0, YEL "NOT FOUND: %s",
                  utstring_body(num_dir));
 #endif
         return;
-/* #if defined(TRACING) */
+/* #if defined(DEBUG_fastbuild) */
 /*     } else { */
-/*         log_warn(YEL "FOUND: %s", utstring_body(num_dir)); */
+/*         LOG_WARN(0, YEL "FOUND: %s", utstring_body(num_dir)); */
 /* #endif */
     }
 
@@ -1846,7 +1908,7 @@ void emit_ocaml_num_pkg(char *runfiles,
 /*     utstring_printf(dst_file, "%s/num/META", switch_lib); */
 /*     rc = access(utstring_body(dst_file), F_OK); */
 /*     if (rc != 0) { */
-/* #if defined(TRACING) */
+/* #if defined(DEBUG_fastbuild) */
 /*         if (coswitch_trace) log_trace(YEL "num pkg not installed" CRESET); */
 /* #endif */
 /*         return; */
@@ -1870,6 +1932,8 @@ void emit_ocaml_num_pkg(char *runfiles,
                     "ocaml_num.BUILD");
     utstring_printf(dst_file, "/BUILD.bazel");
 
+    LOG_DEBUG(2, "cp src: %s, dst: %s",
+              utstring_body(src_file), utstring_body(dst_file));
     copy_buildfile(utstring_body(src_file), dst_file);
 
     utstring_free(src_file);
@@ -1903,9 +1967,9 @@ void _symlink_ocaml_num(char *switch_lib, char *tgtdir)
         /* example, see topkg and topkg-care */
         return;
     }
-#if defined(TRACING)
+#if defined(DEBUG_fastbuild)
     if (coswitch_debug)
-        log_debug("reading num dir %s", utstring_body(opamdir));
+        LOG_DEBUG(0, "reading num dir %s", utstring_body(opamdir));
 #endif
 
     struct dirent *direntry;
@@ -1922,9 +1986,9 @@ void _symlink_ocaml_num(char *switch_lib, char *tgtdir)
             utstring_renew(dst);
             utstring_printf(dst, "%s/%s",
                             tgtdir, direntry->d_name);
-#if defined(TRACING)
+#if defined(DEBUG_fastbuild)
             /* if (coswitch_debug_symlinks) */
-                /* log_debug("symlinking %s to %s\n", */
+                /* LOG_DEBUG(0, "symlinking %s to %s\n", */
                 /*           utstring_body(src), */
                 /*           utstring_body(dst)); */
 #endif
@@ -1959,9 +2023,9 @@ void emit_ocaml_rtevents_pkg(char *runfiles,
                     switch_lib);
     int rc = access(utstring_body(rtevents_dir), F_OK);
     if (rc != 0) {
-#if defined(TRACING)
+#if defined(DEBUG_fastbuild)
         /* if (coswitch_trace) */
-        log_warn(YEL "NOT FOUND: %s",
+        LOG_WARN(0, YEL "NOT FOUND: %s",
                  utstring_body(rtevents_dir));
 #endif
         utstring_new(rtevents_dir);
@@ -1970,22 +2034,22 @@ void emit_ocaml_rtevents_pkg(char *runfiles,
                         switch_lib);
         int rc = access(utstring_body(rtevents_dir), F_OK);
         if (rc != 0) {
-#if defined(TRACING)
+#if defined(DEBUG_fastbuild)
             /* if (coswitch_trace) */
-            log_warn(YEL "NOT FOUND: %s",
+            LOG_WARN(0, YEL "NOT FOUND: %s",
                      utstring_body(rtevents_dir));
 #endif
             utstring_free(rtevents_dir);
             return;
         } else {
-#if defined(TRACING)
-            log_warn(YEL "FOUND: %s", utstring_body(rtevents_dir));
+#if defined(DEBUG_fastbuild)
+            LOG_WARN(0, YEL "FOUND: %s", utstring_body(rtevents_dir));
 #endif
             add_toplevel = true;
         }
-/* #if defined(TRACING) */
+/* #if defined(DEBUG_fastbuild) */
 /*     } else { */
-/*         log_warn(YEL "FOUND: %s", utstring_body(rtevents_dir)); */
+/*         LOG_WARN(0, YEL "FOUND: %s", utstring_body(rtevents_dir)); */
 /* #endif */
     }
 
@@ -2013,6 +2077,8 @@ void emit_ocaml_rtevents_pkg(char *runfiles,
     mkdir_r(utstring_body(dst_dir));
     utstring_printf(dst_file, "%s/BUILD.bazel",
                     utstring_body(dst_dir));
+    LOG_DEBUG(2, "cp src: %s, dst: %s",
+              utstring_body(src_file), utstring_body(dst_file));
     copy_buildfile(utstring_body(src_file), dst_file);
 
     if (add_toplevel) {
@@ -2047,9 +2113,9 @@ void emit_ocaml_rtevents_pkg(char *runfiles,
 void _symlink_ocaml_rtevents(UT_string *rtevents_dir, char *tgtdir)
 {
     TRACE_ENTRY;
-#if defined(TRACING)
+#if defined(DEBUG_fastbuild)
     if (verbosity > 2) {
-        log_debug("src: %s, dst: %s",
+        LOG_DEBUG(0, "src: %s, dst: %s",
                   utstring_body(rtevents_dir), tgtdir);
     }
 #endif
@@ -2069,7 +2135,7 @@ void _symlink_ocaml_rtevents(UT_string *rtevents_dir, char *tgtdir)
         return;
     /* } else { */
     /*     if (verbosity > 1) */
-    /*         log_debug("opened dir %s", utstring_body(rtevents_dir)); */
+    /*         LOG_DEBUG(0, "opened dir %s", utstring_body(rtevents_dir)); */
     }
 
     struct dirent *direntry;
@@ -2086,7 +2152,7 @@ void _symlink_ocaml_rtevents(UT_string *rtevents_dir, char *tgtdir)
             utstring_renew(dst);
             utstring_printf(dst, "%s/%s",
                             tgtdir, direntry->d_name);
-            /* log_debug("symlinking %s to %s", */
+            /* LOG_DEBUG(0, "symlinking %s to %s", */
             /*           utstring_body(src), */
             /*           utstring_body(dst)); */
             errno = 0;
@@ -2129,9 +2195,9 @@ void emit_ocaml_str_pkg(char *runfiles,
                     switch_lib);
     int rc = access(utstring_body(str_dir), F_OK);
     if (rc != 0) {
-#if defined(TRACING)
+#if defined(DEBUG_fastbuild)
         /* if (coswitch_trace) */
-        log_warn(YEL "NOT FOUND: %s",
+        LOG_WARN(0, YEL "NOT FOUND: %s",
                  utstring_body(str_dir));
 #endif
         utstring_new(str_dir);
@@ -2140,29 +2206,29 @@ void emit_ocaml_str_pkg(char *runfiles,
                         switch_lib);
         int rc = access(utstring_body(str_dir), F_OK);
         if (rc != 0) {
-#if defined(TRACING)
+#if defined(DEBUG_fastbuild)
             /* if (coswitch_trace) */
-            log_warn(YEL "NOT FOUND: %s",
+            LOG_WARN(0, YEL "NOT FOUND: %s",
                      utstring_body(str_dir));
 #endif
             utstring_free(str_dir);
             return;
         } else {
-#if defined(TRACING)
+#if defined(DEBUG_fastbuild)
             // found lib/ocaml/str
-            log_warn(YEL "FOUND: %s", utstring_body(str_dir));
+            LOG_WARN(0, YEL "FOUND: %s", utstring_body(str_dir));
 #endif
             add_toplevel = true;
         }
-/* #if defined(TRACING) */
+/* #if defined(DEBUG_fastbuild) */
 /*     } else { */
 /*         if (verbosity > 2) */
-/*             log_warn(YEL "FOUND: %s", utstring_body(str_dir)); */
+/*             LOG_WARN(0, YEL "FOUND: %s", utstring_body(str_dir)); */
 /* #endif */
     } else {
-#if defined(TRACING)
+#if defined(DEBUG_fastbuild)
         /* if (coswitch_trace) */
-        log_warn(YEL "FOUND: %s",
+        LOG_WARN(0, YEL "FOUND: %s",
                  utstring_body(str_dir));
 #endif
     }
@@ -2186,7 +2252,7 @@ void emit_ocaml_str_pkg(char *runfiles,
         // we found lib/ocaml/str, so we need to emit the
         // toplevel w/alias, lib/str
         // but we only symlink to lib/ocaml/lib/str
-        /* log_debug("EMITTING STR TOPLEVEL"); */
+        /* LOG_DEBUG(0, "EMITTING STR TOPLEVEL"); */
         utstring_printf(dst_dir,
                         "%s/str",
                         coswitch_lib);
@@ -2213,6 +2279,8 @@ void emit_ocaml_str_pkg(char *runfiles,
         utstring_renew(dst_file);
         utstring_printf(dst_file, "%s/BUILD.bazel",
                         utstring_body(dst_dir));
+    LOG_DEBUG(2, "cp src: %s, dst: %s",
+              utstring_body(src_file), utstring_body(dst_file));
         copy_buildfile(utstring_body(src_file), dst_file);
         // but symlink to lib/ocaml/str
         _symlink_ocaml_str(str_dir, utstring_body(dst_dir));
@@ -2228,6 +2296,8 @@ void emit_ocaml_str_pkg(char *runfiles,
         mkdir_r(utstring_body(dst_dir));
         utstring_printf(dst_file, "%s/BUILD.bazel",
                         utstring_body(dst_dir));
+    LOG_DEBUG(2, "cp src: %s, dst: %s",
+              utstring_body(src_file), utstring_body(dst_file));
         copy_buildfile(utstring_body(src_file), dst_file);
 
         utstring_new(str_dir);
@@ -2249,9 +2319,9 @@ void emit_ocaml_str_pkg(char *runfiles,
 void _symlink_ocaml_str(UT_string *str_dir, char *tgtdir)
 {
     TRACE_ENTRY;
-#if defined(TRACING)
+#if defined(DEBUG_fastbuild)
     if (verbosity > 3) {
-        log_debug("src: %s,\n\tdst %s",
+        LOG_DEBUG(0, "src: %s,\n\tdst %s",
                   utstring_body(str_dir),
                   tgtdir);
     }
@@ -2278,17 +2348,17 @@ void _symlink_ocaml_str(UT_string *str_dir, char *tgtdir)
         return;
     /* } else { */
     /*     if (verbosity > 1) */
-    /*         log_debug("opened dir %s", utstring_body(str_dir)); */
+    /*         LOG_DEBUG(0, "opened dir %s", utstring_body(str_dir)); */
     } else {
-#if defined(TRACING)
-        log_debug("fopened %s as symlink src",
+#if defined(DEBUG_fastbuild)
+        LOG_DEBUG(0, "fopened %s as symlink src",
                   utstring_body(str_dir));
 #endif
     }
 
     struct dirent *direntry;
     while ((direntry = readdir(d)) != NULL) {
-        /* log_debug("direntry: %s", direntry->d_name); */
+        /* LOG_DEBUG(0, "direntry: %s", direntry->d_name); */
         if(direntry->d_type==DT_REG){
             /* link files starting with "str." */
             if (strncmp("str.", direntry->d_name, 4) != 0)
@@ -2301,7 +2371,7 @@ void _symlink_ocaml_str(UT_string *str_dir, char *tgtdir)
             utstring_renew(dst);
             utstring_printf(dst, "%s/%s",
                             tgtdir, direntry->d_name);
-            /* log_debug("symlinking %s to %s", */
+            /* LOG_DEBUG(0, "symlinking %s to %s", */
             /*           utstring_body(src), */
             /*           utstring_body(dst)); */
             rc = symlink(utstring_body(src),
@@ -2342,9 +2412,9 @@ void emit_ocaml_threads_pkg(char *runfiles,
                     switch_lib);
     int rc = access(utstring_body(threads_dir), F_OK);
     if (rc != 0) {
-#if defined(TRACING)
+#if defined(DEBUG_fastbuild)
         /* if (coswitch_trace) */
-        log_warn(YEL "NOT FOUND: %s",
+        LOG_WARN(0, YEL "NOT FOUND: %s",
                  utstring_body(threads_dir));
 #endif
         utstring_new(threads_dir);
@@ -2353,23 +2423,23 @@ void emit_ocaml_threads_pkg(char *runfiles,
                         switch_lib);
         int rc = access(utstring_body(threads_dir), F_OK);
         if (rc != 0) {
-#if defined(TRACING)
+#if defined(DEBUG_fastbuild)
             /* if (coswitch_trace) */
-            log_warn(YEL "NOT FOUND: %s",
+            LOG_WARN(0, YEL "NOT FOUND: %s",
                      utstring_body(threads_dir));
 #endif
             utstring_free(threads_dir);
             return;
-#if defined(TRACING)
+#if defined(DEBUG_fastbuild)
         } else {
-            log_warn(YEL "FOUND: %s", utstring_body(threads_dir));
+            LOG_WARN(0, YEL "FOUND: %s", utstring_body(threads_dir));
             add_toplevel = true;
 
 #endif
         }
-/* #if defined(TRACING) */
+/* #if defined(DEBUG_fastbuild) */
 /*     } else { */
-/*         log_warn(YEL "FOUND: %s", utstring_body(threads_dir)); */
+/*         LOG_WARN(0, YEL "FOUND: %s", utstring_body(threads_dir)); */
 /* #endif */
     }
 
@@ -2396,6 +2466,8 @@ void emit_ocaml_threads_pkg(char *runfiles,
     mkdir_r(utstring_body(dst_dir));
     utstring_printf(dst_file, "%s/BUILD.bazel",
                     utstring_body(dst_dir));
+    LOG_DEBUG(2, "cp src: %s, dst: %s",
+              utstring_body(src_file), utstring_body(dst_file));
     copy_buildfile(utstring_body(src_file), dst_file);
 
     if (add_toplevel) {
@@ -2434,10 +2506,10 @@ void emit_ocaml_threads_pkg(char *runfiles,
 void _symlink_ocaml_threads(UT_string *threads_dir, char *tgtdir)
 {
     TRACE_ENTRY;
-#if defined(TRACING)
+#if defined(DEBUG_fastbuild)
     if (verbosity > 2) {
-        log_debug("  src: %s", utstring_body(threads_dir));
-        log_debug("  dst: %s", tgtdir);
+        LOG_DEBUG(0, "  src: %s", utstring_body(threads_dir));
+        LOG_DEBUG(0, "  dst: %s", tgtdir);
     }
 #endif
     UT_string *src;
@@ -2556,9 +2628,9 @@ void emit_ocaml_ocamldoc_pkg(char *runfiles,
                     switch_lib);
     int rc = access(utstring_body(ocamldoc_dir), F_OK);
     if (rc != 0) {
-#if defined(TRACING)
+#if defined(DEBUG_fastbuild)
         /* if (coswitch_trace) */
-        log_warn(YEL "NOT FOUND: %s",
+        LOG_WARN(0, YEL "NOT FOUND: %s",
                  utstring_body(ocamldoc_dir));
 #endif
         utstring_new(ocamldoc_dir);
@@ -2567,21 +2639,21 @@ void emit_ocaml_ocamldoc_pkg(char *runfiles,
                         switch_lib);
         int rc = access(utstring_body(ocamldoc_dir), F_OK);
         if (rc != 0) {
-#if defined(TRACING)
+#if defined(DEBUG_fastbuild)
             /* if (coswitch_trace) */
-            log_warn(YEL "NOT FOUND: %s",
+            LOG_WARN(0, YEL "NOT FOUND: %s",
                      utstring_body(ocamldoc_dir));
 #endif
             utstring_free(ocamldoc_dir);
             return;
-#if defined(TRACING)
+#if defined(DEBUG_fastbuild)
         } else {
-            log_warn(YEL "FOUND: %s", utstring_body(ocamldoc_dir));
+            LOG_WARN(0, YEL "FOUND: %s", utstring_body(ocamldoc_dir));
 #endif
         }
-/* #if defined(TRACING) */
+/* #if defined(DEBUG_fastbuild) */
 /*     } else { */
-/*         log_warn(YEL "FOUND: %s", utstring_body(ocamldoc_dir)); */
+/*         LOG_WARN(0, YEL "FOUND: %s", utstring_body(ocamldoc_dir)); */
 /* #endif */
     }
 
@@ -2607,6 +2679,8 @@ void emit_ocaml_ocamldoc_pkg(char *runfiles,
     mkdir_r(utstring_body(dst_dir));
     utstring_printf(dst_file, "%s/BUILD.bazel",
                     utstring_body(dst_dir));
+    LOG_DEBUG(2, "cp src: %s, dst: %s",
+              utstring_body(src_file), utstring_body(dst_file));
     copy_buildfile(utstring_body(src_file), dst_file);
 
     _symlink_ocaml_ocamldoc(ocamldoc_dir, utstring_body(dst_dir));
@@ -2644,7 +2718,7 @@ void _symlink_ocaml_ocamldoc(UT_string *ocamldoc_dir,
         return;
     /* } else { */
     /*     if (verbosity > 1) */
-    /*         log_debug("opened dir %s", utstring_body(ocamldoc_dir)); */
+    /*         LOG_DEBUG(0, "opened dir %s", utstring_body(ocamldoc_dir)); */
     }
 
     struct dirent *direntry;
@@ -2661,7 +2735,7 @@ void _symlink_ocaml_ocamldoc(UT_string *ocamldoc_dir,
             utstring_renew(dst);
             utstring_printf(dst, "%s/%s",
                             tgtdir, direntry->d_name);
-            /* log_debug("ocamldoc symlinking %s to %s", */
+            /* LOG_DEBUG(0, "ocamldoc symlinking %s to %s", */
             /*           utstring_body(src), */
             /*           utstring_body(dst)); */
             rc = symlink(utstring_body(src),
@@ -2698,9 +2772,9 @@ void emit_ocaml_unix_pkg(char *runfiles,
 
     int rc = access(utstring_body(unix_dir), F_OK);
     if (rc != 0) {
-#if defined(TRACING)
+#if defined(DEBUG_fastbuild)
         /* if (coswitch_trace) */
-        log_warn(YEL "NOT FOUND: %s",
+        LOG_WARN(0, YEL "NOT FOUND: %s",
                  utstring_body(unix_dir));
 #endif
         utstring_new(unix_dir);
@@ -2709,25 +2783,25 @@ void emit_ocaml_unix_pkg(char *runfiles,
                         switch_lib);
         int rc = access(utstring_body(unix_dir), F_OK);
         if (rc != 0) {
-#if defined(TRACING)
+#if defined(DEBUG_fastbuild)
             /* if (coswitch_trace) */
-            log_warn(YEL "NOT FOUND: %s",
+            LOG_WARN(0, YEL "NOT FOUND: %s",
                      utstring_body(unix_dir));
 #endif
             utstring_free(unix_dir);
             return;
         } else {
-#if defined(TRACING)
-            log_warn(YEL "FOUND: %s", utstring_body(unix_dir));
+#if defined(DEBUG_fastbuild)
+            LOG_WARN(0, YEL "FOUND: %s", utstring_body(unix_dir));
 #endif
             add_toplevel = true;
         }
-/* #if defined(TRACING) */
+/* #if defined(DEBUG_fastbuild) */
 /*     } else { */
-/*         log_warn(YEL "FOUND: %s", utstring_body(unix_dir)); */
+/*         LOG_WARN(0, YEL "FOUND: %s", utstring_body(unix_dir)); */
 /* #endif */
     /* } else { */
-    /*     log_warn(YEL "FOUND: %s", */
+    /*     LOG_WARN(0, YEL "FOUND: %s", */
     /*              utstring_body(unix_dir)); */
     }
 
@@ -2756,6 +2830,8 @@ void emit_ocaml_unix_pkg(char *runfiles,
     mkdir_r(utstring_body(dst_dir));
     utstring_printf(dst_file, "%s/BUILD.bazel",
                     utstring_body(dst_dir));
+    LOG_DEBUG(2, "cp src: %s, dst: %s",
+              utstring_body(src_file), utstring_body(dst_file));
     copy_buildfile(utstring_body(src_file), dst_file);
 
     if (add_toplevel) {
@@ -2773,7 +2849,7 @@ void emit_ocaml_unix_pkg(char *runfiles,
         utstring_renew(dst_file);
         utstring_printf(dst_file, "%s/libunix.a",
                         utstring_body(dst_dir));
-        /* log_debug("SYMLINKING %s to %s\n", */
+        /* LOG_DEBUG(0, "SYMLINKING %s to %s\n", */
         /*           utstring_body(src_file), */
         /*           utstring_body(dst_file)); */
         rc = symlink(utstring_body(src_file),
@@ -2817,8 +2893,8 @@ void emit_ocaml_unix_pkg(char *runfiles,
 void _symlink_ocaml_unix(UT_string *unix_dir, char *tgtdir)
 {
     TRACE_ENTRY;
-    /* log_debug("unix_dir: %s", utstring_body(unix_dir)); */
-    /* log_debug("tgtdir: %s", tgtdir); */
+    /* LOG_DEBUG(0, "unix_dir: %s", utstring_body(unix_dir)); */
+    /* LOG_DEBUG(0, "tgtdir: %s", tgtdir); */
     UT_string *src;
     utstring_new(src);
     UT_string *dst;
@@ -2851,7 +2927,7 @@ void _symlink_ocaml_unix(UT_string *unix_dir, char *tgtdir)
             utstring_renew(dst);
             utstring_printf(dst, "%s/%s",
                             tgtdir, direntry->d_name);
-            /* log_debug("symlinking %s to %s", */
+            /* LOG_DEBUG(0, "symlinking %s to %s", */
             /*        utstring_body(src), */
             /*        utstring_body(dst)); */
             rc = symlink(utstring_body(src),
@@ -2901,6 +2977,8 @@ void emit_ocaml_c_api_pkg(char *runfiles,
     utstring_printf(dst_file,
                     "%s/BUILD.bazel",
                     utstring_body(dst_dir));
+    LOG_DEBUG(2, "cp src: %s, dst: %s",
+              utstring_body(src_file), utstring_body(dst_file));
     copy_buildfile(utstring_body(src_file), dst_file);
 
     _symlink_ocaml_c_hdrs(switch_lib, utstring_body(dst_dir));
@@ -2984,9 +3062,9 @@ void _symlink_ocaml_c_hdrs(char *switch_lib, char *tgtdir)
 void _symlink_ocaml_runtime_libs(char *switch_lib, char *tgtdir)
 {
     TRACE_ENTRY;
-#if defined(TRACING)
-    log_debug("\tswitch_lib: %s\n", switch_lib);
-    log_debug("\ttgtdir    : %s\n", tgtdir);
+#if defined(DEBUG_fastbuild)
+    LOG_DEBUG(0, "\tswitch_lib: %s\n", switch_lib);
+    LOG_DEBUG(0, "\ttgtdir    : %s\n", tgtdir);
 #endif
 
     UT_string *opamdir;
@@ -3037,9 +3115,9 @@ void _symlink_ocaml_runtime_libs(char *switch_lib, char *tgtdir)
             utstring_printf(dst, "%s/%s",
                             utstring_body(obazldir), /* tgtdir, */
                             direntry->d_name);
-#if defined(TRACING)
+#if defined(DEBUG_fastbuild)
             /* if (coswitch_debug_symlinks) { */
-                log_debug("c_libs: symlinking %s to %s\n",
+                LOG_DEBUG(0, "c_libs: symlinking %s to %s\n",
                           utstring_body(src),
                           utstring_body(dst));
             /* } */
@@ -3067,9 +3145,9 @@ void _symlink_ocaml_runtime_libs(char *switch_lib, char *tgtdir)
 void _symlink_ocaml_runtime_compiler_libs(char *switch_lib, char *tgtdir)
 {
     TRACE_ENTRY;
-#if defined(TRACING)
-    log_debug("\tswitch_lib: %s\n", switch_lib);
-    log_debug("\ttgtdir    : %s\n", tgtdir);
+#if defined(DEBUG_fastbuild)
+    LOG_DEBUG(0, "\tswitch_lib: %s\n", switch_lib);
+    LOG_DEBUG(0, "\ttgtdir    : %s\n", tgtdir);
 #endif
 
     UT_string *opamdir;
@@ -3117,9 +3195,9 @@ void _symlink_ocaml_runtime_compiler_libs(char *switch_lib, char *tgtdir)
             utstring_printf(dst, "%s/%s",
                             utstring_body(obazldir), /* tgtdir, */
                             direntry->d_name);
-#if defined(TRACING)
+#if defined(DEBUG_fastbuild)
             /* if (coswitch_debug_symlinks) { */
-                log_debug("c_libs: symlinking %s to %s\n",
+                LOG_DEBUG(0, "c_libs: symlinking %s to %s\n",
                           utstring_body(src),
                           utstring_body(dst));
             /* } */
@@ -3212,7 +3290,8 @@ EXPORT void emit_ocaml_workspace(UT_string *registry,
                                  char *runfiles)
 {
     TRACE_ENTRY;
-#if defined(TRACING)
+    LOG_DEBUG(0, "switch_name: %s", switch_name);
+#if defined(DEBUG_fastbuild)
     if (verbosity > 0) {
         log_trace(BLU "EMIT_ocaml_workspace:" CRESET
                   " switch_pfx:%s, dst: %s",
@@ -3300,25 +3379,25 @@ EXPORT void emit_ocaml_workspace(UT_string *registry,
 
     /* UT_string *xrunfiles; */
     /* utstring_new(xrunfiles); */
-    /* log_debug("PWD: %s", getcwd(NULL,0)); */
-    /* log_debug("OPAM_SWITCH_PREFIX: %s", */
+    /* LOG_DEBUG(0, "PWD: %s", getcwd(NULL,0)); */
+    /* LOG_DEBUG(0, "OPAM_SWITCH_PREFIX: %s", */
     /*           getenv("OPAM_SWITCH_PREFIX")); */
-    /* log_debug("BAZEL_CURRENT_REPOSITORY: %s", */
+    /* LOG_DEBUG(0, "BAZEL_CURRENT_REPOSITORY: %s", */
     /*           BAZEL_CURRENT_REPOSITORY); */
     /* if (getenv("BUILD_WORKSPACE_DIRECTORY")) { */
     /*     if (strlen(BAZEL_CURRENT_REPOSITORY) == 0) { */
     /*         utstring_printf(xrunfiles, "%s", */
     /*                         realpath("new", NULL)); */
     /*     } else { */
-    /*         log_debug("XXXXXXXXXXXXXXXX %s", */
+    /*         LOG_DEBUG(0, "XXXXXXXXXXXXXXXX %s", */
     /*                   BAZEL_CURRENT_REPOSITORY); */
     /*         char *rp = realpath("external/" */
     /*                             BAZEL_CURRENT_REPOSITORY, */
     /*                             NULL); */
-    /*         log_debug("PWD: %s", getcwd(NULL,0)); */
-    /*         log_debug("AAAAAAAAAAAAAAAA %s", rp); */
+    /*         LOG_DEBUG(0, "PWD: %s", getcwd(NULL,0)); */
+    /*         LOG_DEBUG(0, "AAAAAAAAAAAAAAAA %s", rp); */
     /*         utstring_printf(xrunfiles, "%s", rp); */
-    /* log_debug("XXXXXXXXXXXXXXXX %s", */
+    /* LOG_DEBUG(0, "XXXXXXXXXXXXXXXX %s", */
     /*           utstring_body(xrunfiles)); */
     /*     } */
     /* } else { */
@@ -3329,7 +3408,7 @@ EXPORT void emit_ocaml_workspace(UT_string *registry,
     /* } */
 
     /* char *runfiles = utstring_body(xrunfiles); // strdup? */
-    /* log_debug("RUNFILES: %s", runfiles); */
+    /* LOG_DEBUG(0, "RUNFILES: %s", runfiles); */
 
     emit_ocaml_bin_dir(switch_pfx, coswitch_lib);
 

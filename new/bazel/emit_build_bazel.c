@@ -2815,7 +2815,7 @@ void emit_bazel_subpackages(// char *ws_name,
         }
     }
 #if defined(DEBUG_fastbuild)
-    LOG_DEBUG(0, "finished level: %d", newlevel);
+    LOG_DEBUG(0, "Finished level: %d", newlevel);
 #endif
     /*  restore */
     newlevel--;
@@ -2824,6 +2824,7 @@ void emit_bazel_subpackages(// char *ws_name,
     free(curr_parent);
 
     utstring_free(_new_pkg_suffix);
+    TRACE_EXIT;
 }
 
 void handle_directory_property(FILE* ostream, int level,
@@ -2908,7 +2909,7 @@ EXPORT void emit_module_file(UT_string *module_file,
                              struct obzl_meta_package *_pkg,
                              struct obzl_meta_package *_pkgs)
 {
-    TRACE_ENTRY;
+    TRACE_ENTRY_MSG("%s", _pkg->name);
     semver_t *semv;
     char version[256];
     semv = findlib_pkg_version(_pkg);
@@ -2947,35 +2948,36 @@ EXPORT void emit_module_file(UT_string *module_file,
 
     // get **repo** deps: direct deps of pkg and all subpkgs
     UT_array *pkg_deps = findlib_pkg_deps(_pkg, true);
-
-    char **p = NULL;
-    struct obzl_meta_package *pkg;
-    /* LOG_DEBUG(0, "HASH CT: %d", HASH_COUNT(_pkgs)); */
-    /* exit(0); */
-    while ( (p=(char**)utarray_next(pkg_deps, p))) {
-        if (strncmp(*p, _pkg->name, 512) != 0) {
-            HASH_FIND_STR(_pkgs, *p, pkg);
-            if (pkg) {
-                free(semv);
-                version[0] = '\0';
-                semv = findlib_pkg_version(pkg);
-                sprintf(version, "%d.%d.%d",
-                        semv->major, semv->minor, semv->patch);
-            } else {
-                //FIXME: pkg 'compiler-libs' (a dep of
-                // ppxlib.astlib etc.) is a pseudo-pkg,
-                // referring to lib/ocaml/compiler-libs,
-                // so it has neither pkg entry nor version
-                if (strncmp(*p, "compiler-libs", 13) == 0) {
-                    sprintf(version, "%d.%d.%d", 0,0,0);
+    if (pkg_deps) {
+        char **p = NULL;
+        struct obzl_meta_package *pkg;
+        /* LOG_DEBUG(0, "HASH CT: %d", HASH_COUNT(_pkgs)); */
+        /* exit(0); */
+        while ( (p=(char**)utarray_next(pkg_deps, p))) {
+            if (strncmp(*p, _pkg->name, 512) != 0) {
+                HASH_FIND_STR(_pkgs, *p, pkg);
+                if (pkg) {
+                    free(semv);
+                    version[0] = '\0';
+                    semv = findlib_pkg_version(pkg);
+                    sprintf(version, "%d.%d.%d",
+                            semv->major, semv->minor, semv->patch);
                 } else {
-                    sprintf(version, "%d.%d.%d", -1, -1 , -1);
+                    //FIXME: pkg 'compiler-libs' (a dep of
+                    // ppxlib.astlib etc.) is a pseudo-pkg,
+                    // referring to lib/ocaml/compiler-libs,
+                    // so it has neither pkg entry nor version
+                    if (strncmp(*p, "compiler-libs", 13) == 0) {
+                        sprintf(version, "%d.%d.%d", 0,0,0);
+                    } else {
+                        sprintf(version, "%d.%d.%d", -1, -1 , -1);
+                    }
                 }
+                fprintf(ostream, "bazel_dep(name = \"%s\", # %s\n",
+                        *p, version);
+                fprintf(ostream, "          version = \"%s\")\n",
+                        default_version);
             }
-            fprintf(ostream, "bazel_dep(name = \"%s\", # %s\n",
-                    *p, version);
-            fprintf(ostream, "          version = \"%s\")\n",
-                    default_version);
         }
     }
     fprintf(ostream, "\n");
@@ -2985,7 +2987,9 @@ EXPORT void emit_module_file(UT_string *module_file,
         fprintf(INFOFD, GRN "INFO" CRESET
                 " wrote: %s\n", utstring_body(module_file));
     }
-    utarray_free(pkg_deps);
+    if (pkg_deps) {
+        utarray_free(pkg_deps);
+    }
     TRACE_EXIT;
 }
 

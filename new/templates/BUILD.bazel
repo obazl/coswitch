@@ -1,3 +1,9 @@
 exports_files(
     glob(["**/*.BUILD", "**/*.BUILD.mustache"])
 )
+
+filegroup(
+    name = "templates",
+    srcs = glob(["**/**"]),
+    visibility = ["//install:__pkg__"]
+)

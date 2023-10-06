@@ -76,6 +76,8 @@ EXPORT void emit_registry_record(UT_string *registry,
                                  struct obzl_meta_package *pkgs)
 {
     TRACE_ENTRY;
+    if (pkg)
+        LOG_DEBUG(0, "%s", pkg->name);
     char *pkg_name;
     char *module_name;
     char version[256];
@@ -294,15 +296,30 @@ UT_string *config_bzlmod_registry(char *switch_name,
         //in-bazel:
         //  shared: .local/share/obazl/registry
         //  local:  .config/obazl/registry
-        utstring_printf(obazl_registry_home,
-                        "%s/registry/%s",
-                        utstring_body(coswitch_root),
-                        switch_name);
+        if (xdg_install) {
+            utstring_printf(obazl_registry_home,
+                            "%s/registry/%s",
+                            utstring_body(coswitch_root),
+                            switch_name);
+        } else {
+            // .opam install
+            utstring_printf(obazl_registry_home,
+                            "%s",
+                            utstring_body(coswitch_root));
+        }
     } else {
         //in-opam:  <switch-pfx>/share/obazl
-        utstring_printf(obazl_registry_home,
-                        "%s",
-                        utstring_body(coswitch_root));
+        if (xdg_install) {
+            utstring_printf(obazl_registry_home,
+                            "%s/registry/%s",
+                            utstring_body(coswitch_root),
+                            switch_name);
+        } else {
+            // .opam install
+            utstring_printf(obazl_registry_home,
+                            "%s",
+                            utstring_body(coswitch_root));
+        }
     }
     mkdir_r(utstring_body(obazl_registry_home));
 
@@ -314,14 +331,25 @@ UT_string *config_bzlmod_registry(char *switch_name,
     if (bazel_env) {
         //shared: .local/share/obazl/opam/<switch-name>/lib
         //local:  .config/obazl/opam/lib
-        utstring_printf(module_base_path,
-                        "%s/opam/%s/lib",
-                        utstring_body(coswitch_root),
-                        switch_name);
-
+        if (xdg_install) {
+            utstring_printf(module_base_path,
+                            "%s/opam/%s/lib",
+                            utstring_body(coswitch_root),
+                            switch_name);
+        } else {
+            // .opam install
+            utstring_printf(module_base_path, "lib");
+        }
     } else {
-        //in-opam: relative path "lib"
-        utstring_printf(module_base_path, "lib");
+        if (xdg_install) {
+            utstring_printf(module_base_path,
+                            "%s/opam/%s/lib",
+                            utstring_body(coswitch_root),
+                            switch_name);
+        } else {
+            // .opam install
+            utstring_printf(module_base_path, "lib");
+        }
     }
     if (verbosity > 0)
         log_info("module_base_path: %s",

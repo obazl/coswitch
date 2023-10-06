@@ -49,6 +49,8 @@ cc_library(
         "-I$(@uthash)/src",
         "-I$(GENDIR)/$(@)/new",
         "-I$(GENDIR)/$(@)/new/bazel",
+
+        "-Wno-gnu-statement-expression-from-macro-expansion"
     ],
     local_defines = DEFINES,
     data  = [
@@ -57,6 +59,7 @@ cc_library(
         "//new/templates/ocaml:ocaml_bigarray_alias.BUILD",
         "//new/templates/ocaml:ocaml_c_api.BUILD",
         "//new/templates/ocaml:ocaml_compiler-libs.BUILD",
+        "//new/templates/ocaml:ocaml_compiler-libs_alias.BUILD",
         "//new/templates/ocaml/compiler_libs:bytecomp.BUILD",
         "//new/templates/ocaml/compiler_libs:common.BUILD",
         "//new/templates/ocaml/compiler_libs:optcomp.BUILD",
@@ -76,10 +79,10 @@ cc_library(
         "//new/templates/ocaml:ocaml_str.BUILD",
         "//new/templates/ocaml:ocaml_str_alias.BUILD",
 
-        "//new/templates/platform:platform.BUILD",
         "//new/templates/platform:arch.BUILD",
-        "//new/templates/platform:executor.BUILD",
         "//new/templates/platform:emitter.BUILD",
+        "//new/templates/platform:executor.BUILD",
+        "//new/templates/platform:platform.BUILD",
 
         "//new/templates:toolchain/adapters/local.BUILD",
         "//new/templates:toolchain/adapters/local.BUILD.mustache",
@@ -100,6 +103,7 @@ cc_library(
         "//new/templates/ocaml:ocaml_threads_alias.BUILD",
         "//new/templates/ocaml:ocaml_unix.BUILD",
         "//new/templates/ocaml:ocaml_unix_alias.BUILD",
+        "//new/templates/ocaml:ocaml_version.BUILD",
     ],
     toolchains = TOOLCHAINS,
     visibility = ["//visibility:public"]

@@ -1,0 +1,9 @@
+
+sh_binary(
+    name = "install",
+    srcs = ["install.sh"],
+    data = [
+        "@bazel_tools//tools/bash/runfiles",
+        "//new",
+    ]
+)

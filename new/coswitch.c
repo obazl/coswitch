@@ -31,6 +31,8 @@
 
 bool bazel_env;
 
+bool xdg_install = false;
+
 static UT_string *meta_path;
 
 static char *switch_name;
@@ -82,6 +84,7 @@ enum OPTS {
     OPT_PKG = 0,
     OPT_SWITCH,
     FLAG_JSOO,
+    FLAG_XDG_INSTALL,
     FLAG_CLEAN,
     FLAG_SHOW_CONFIG,
 #if defined(DEBUG_fastbuild)
@@ -102,8 +105,8 @@ void _print_usage(void) {
     printf("Usage:\t$ bazel run @coswitch//new [flags, options]\n");
 
     printf("Flags\n");
-    printf("\t-j, --jsoo\t\t\tImport Js_of_ocaml resources.\n");
-    printf("\t-c, --clean\t\t\tClean coswitch and reset to uninitialized state. (temporarily disabled)\n");
+    /* printf("\t-j, --jsoo\t\t\tImport Js_of_ocaml resources.\n"); */
+    /* printf("\t-c, --clean\t\t\tClean coswitch and reset to uninitialized state. (temporarily disabled)\n"); */
 
 #if defined(DEBUG_fastbuild)
     printf("\t-d, --debug\t\t\tEnable debug flags. Repeatable.\n");
@@ -118,8 +121,10 @@ static struct option options[] = {
                  .flags=GOPT_ARGUMENT_REQUIRED},
     [OPT_SWITCH] = {.long_name="switch",.short_name='s',
                  .flags=GOPT_ARGUMENT_REQUIRED},
+    [FLAG_XDG_INSTALL] = {.long_name="xdg", .short_name='x',
+                          .flags=GOPT_ARGUMENT_FORBIDDEN},
     [FLAG_JSOO] = {.long_name="jsoo", .short_name='j',
-                   .flags=GOPT_ARGUMENT_REQUIRED},
+                   .flags=GOPT_ARGUMENT_FORBIDDEN},
     [FLAG_CLEAN] = {.long_name="clean",.short_name='c',
                     .flags=GOPT_ARGUMENT_FORBIDDEN},
     [FLAG_SHOW_CONFIG] = {.long_name="show-config",
@@ -203,10 +208,13 @@ void _set_options(struct option options[])
     if (options[FLAG_TRACE_OPAMC].count) {
         opamc_trace = true;
     }
-
 #endif
     if (options[FLAG_JSOO].count) {
         enable_jsoo = true;
+    }
+
+    if (options[FLAG_XDG_INSTALL].count) {
+        xdg_install = true;
     }
 
     /* if (options[OPT_PKG].count) { */
@@ -220,12 +228,14 @@ void _set_options(struct option options[])
 }
 
 /* **************** **************** */
-void pkg_handler(char *site_lib, /* switch_lib */
+void pkg_handler(char *switch_pfx,
+                 char *site_lib, /* switch_lib */
                  char *pkg_dir,  /* subdir of site_lib */
                  void *_paths) /* struct paths_s* */
         /* .registry = registry, */
         /* .coswitch_lib = coswitch_lib */
 {
+    bool empty_pkg = false;
     struct paths_s *paths = (struct paths_s*)_paths;
     UT_string *registry = (UT_string*)paths->registry;
     UT_string *coswitch_lib = (UT_string*)paths->coswitch_lib;
@@ -258,25 +268,44 @@ void pkg_handler(char *site_lib, /* switch_lib */
     /*     /\* exists *\/ */
     /*     log_info("accessible: %s", utstring_body(meta_path)); */
     }
-
+    empty_pkg = false;
     errno = 0;
     // pkg must be freed...
     struct obzl_meta_package *pkg
         = obzl_meta_parse_file(utstring_body(meta_path));
 
     if (pkg == NULL) {
-        if (errno == -1) {
+        if ((errno == -1)
+                || (errno == -2)) {
+            empty_pkg = true;
 /* #if defined(TRACING) */
             if (verbosity > 2)
                 log_warn("Empty META file: %s", utstring_body(meta_path));
 /* #endif */
             /* check dune-package for installed executables */
             /* chdir(old_cwd); */
-            return;
-        }
-        else if (errno == -2) {
-            log_warn("META file contains only whitespace: %s", utstring_body(meta_path));
-            return;
+
+    pkg = (struct obzl_meta_package*)calloc(sizeof(struct obzl_meta_package), 1);
+ char *fname = strdup(utstring_body(meta_path));
+    pkg->name      = package_name_from_file_name(fname);
+    /* pkg->name      = pkg_dir; */
+    char *x = strdup(pkg->name);
+    char *p;
+    // module names may not contain uppercase
+    for (p = x; *p; ++p) *p = tolower(*p);
+    pkg->module_name = strdup(x);
+    free(x);
+    x = strdup(fname);
+    pkg->path      = strdup(dirname(x));
+    free(x);
+    pkg->directory = pkg->name; // dirname(fname);
+    pkg->metafile  = utstring_body(meta_path);
+    pkg->entries = NULL;
+            /* return; */
+        /* } */
+        /* else if (errno == -2) { */
+        /*     log_warn("META file contains only whitespace: %s", utstring_body(meta_path)); */
+        /*     return; */
         } else {
             log_error("Error parsing %s", utstring_body(meta_path));
             return;
@@ -317,7 +346,7 @@ void pkg_handler(char *site_lib, /* switch_lib */
     /* for (p = pkg_name; *p; ++p) *p = tolower(*p); */
 
     /* log_debug("adding next pkg: %s, (%p)", pkg->name, pkg); */
-    /* log_debug("  keyptr: %p", pkg->name); */
+    /* log_debug("hashing keyptr: %s", pkg->name); */
     /* log_debug("  path: %s (%p)", pkg->path, pkg->path); */
 
     HASH_ADD_KEYPTR(hh, paths->pkgs,
@@ -360,6 +389,8 @@ void pkg_handler(char *site_lib, /* switch_lib */
 
     // MODULE.bazel emitted later, after all pkgs parsed
 
+    if (!empty_pkg) {
+
     // then emit the BUILD.bazel files for the opam pkg
     utstring_new(imports_path);
     utstring_printf(imports_path, "%s", pkg_name);
@@ -384,7 +415,7 @@ void pkg_handler(char *site_lib, /* switch_lib */
                      pkg);
                      /* opam_pending_deps, */
                      /* opam_completed_deps); */
-
+    }
     // this will emit one BUILD.bazel file per pkg & subpkg
     // and put them in <switch>/lib/<repo>/lib/<subpkg> dirs
     // e.g. <switch>/lib/ppxlib/lib/ast for ppxlib.ast
@@ -399,10 +430,7 @@ void pkg_handler(char *site_lib, /* switch_lib */
     /*                      default_version // (char*)version */
     /*                      ); */
 
-    //FIXME: read dunfile is choking on dune-package files,
-    // which all contain
-    //(sections (lib .) (libexec .) (doc ../../doc/<pkg>))
-    emit_pkg_bindir(site_lib, utstring_body(coswitch_lib),
+    emit_pkg_bindir(switch_pfx, utstring_body(coswitch_lib),
                     pkg->name);
 }
 
@@ -539,9 +567,10 @@ int main(int argc, char *argv[])
             utstring_printf(runfiles_root, "%s/new", rp);
         }
     } else {
+        // running outside of bazel
         utstring_printf(runfiles_root,
-                        "%s/share/obazl",
-                        switch_pfx);
+                        "%s/obazl",
+                        xdg_data_home());
     }
     /* log_debug("RUNFILES_ROOT: %s", utstring_body(runfiles_root)); */
     chdir(bws_dir);
@@ -575,9 +604,15 @@ int main(int argc, char *argv[])
         if (options[OPT_SWITCH].count) {
             // --switch arg overrides local switch
             coswitch_name = switch_name;
-            utstring_printf(coswitch_root,
-                            "%s/obazl",
-                            xdg_data_home());
+            if (xdg_install) {
+                utstring_printf(coswitch_root,
+                                "%s/obazl",
+                                xdg_data_home());
+            } else {
+                utstring_printf(coswitch_root,
+                                "%s/share/obazl",
+                                switch_pfx);
+            }
         } else {
             // no --switch arg
             // cwd is build ws, does ./_opam exist?
@@ -598,20 +633,32 @@ int main(int argc, char *argv[])
                 /* log_debug("NOTFOUND LOCAL"); */
                 coswitch_name = switch_name;
                 utstring_renew(coswitch_root);
-                utstring_printf(coswitch_root,
-                                "%s/obazl",
-                                xdg_data_home()); // ~/.local/share
-                /* log_debug("NOTFOUND LOCAL, coswitch root: %s", */
-                /*           utstring_body(coswitch_root)); */
+                if (xdg_install) {
+                    utstring_printf(coswitch_root,
+                                    "%s/obazl",
+                                    xdg_data_home());
+                } else {
+                    utstring_printf(coswitch_root,
+                                    "%s/share/obazl",
+                                    switch_pfx);
+                }
             }
         }
     } else {
+        // not running under bazel
         //in-opam: <switch-pfx>/share/obazl
-        coswitch_name = ""; // switch_name;
         utstring_renew(coswitch_root);
-        utstring_printf(coswitch_root,
-                        "%s/share/obazl",
-                        switch_pfx);
+        if (xdg_install) {
+            coswitch_name = switch_name;
+            utstring_printf(coswitch_root,
+                            "%s/obazl",
+                            xdg_data_home());
+        } else {
+            coswitch_name = "";
+            utstring_printf(coswitch_root,
+                            "%s/share/obazl",
+                            switch_pfx);
+        }
     }
     /* log_debug("coswitch_root: %s", */
     /*           utstring_body(coswitch_root)); */
@@ -622,15 +669,28 @@ int main(int argc, char *argv[])
         //in-bazel:
         //  shared: ~/.local/share/obazl/opam/<switch-name>
         //  local:  .config/obazl/opam/lib
-        utstring_printf(coswitch_pfx,
-                        "%s/opam/%s",
-                        utstring_body(coswitch_root),
-                        coswitch_name);
+        if (xdg_install) {
+            utstring_printf(coswitch_pfx,
+                            "%s/opam/%s",
+                            utstring_body(coswitch_root),
+                            coswitch_name);
+        } else {
+            utstring_printf(coswitch_pfx,
+                            "%s",
+                            utstring_body(coswitch_root));
+        }
     } else {
-        //in-opam: <switch-pfx>/share/obazl
-        utstring_printf(coswitch_pfx,
-                        "%s",
-                        utstring_body(coswitch_root));
+        // running outside of bazel
+        if (xdg_install) {
+            utstring_printf(coswitch_pfx,
+                            "%s/opam/%s",
+                            utstring_body(coswitch_root),
+                            coswitch_name);
+        } else {
+            utstring_printf(coswitch_pfx,
+                            "%s",
+                            utstring_body(coswitch_root));
+        }
     }
 
     UT_string *coswitch_lib;
@@ -639,22 +699,36 @@ int main(int argc, char *argv[])
         //in-bazel:
         //  shared: ~/.local/share/obazl/opam/<switch-name>/lib
         //  local:  .config/obazl/opam/lib
-        utstring_printf(coswitch_lib,
-                        "%s/opam/%s/lib",
-                        utstring_body(coswitch_root),
-                        coswitch_name);
+        if (xdg_install) {
+            utstring_printf(coswitch_lib,
+                            "%s/opam/%s/lib",
+                            utstring_body(coswitch_root),
+                            coswitch_name);
+        } else {
+            //in-opam: <switch-pfx>/share/obazl/lib
+            utstring_printf(coswitch_lib,
+                            "%s/lib",
+                            utstring_body(coswitch_root));
+        }
     } else {
-        //in-opam: <switch-pfx>/share/obazl/lib
-        utstring_printf(coswitch_lib,
-                        "%s/lib",
-                        utstring_body(coswitch_root));
+        if (xdg_install) {
+            utstring_printf(coswitch_lib,
+                            "%s/opam/%s/lib",
+                            utstring_body(coswitch_root),
+                            coswitch_name);
+        } else {
+            //in-opam: <switch-pfx>/share/obazl/lib
+            utstring_printf(coswitch_lib,
+                            "%s/lib",
+                            utstring_body(coswitch_root));
+        }
     }
 
     /* registry:
        in-bazel:
          shared: .local/share/obazl/registry
          local:  .config/obazl/registry
-       in-opam:  <switch-pfx>/share/obazl
+       out-of-bazel: .opam or xdg <switch-pfx>/share/obazl
     */
     UT_string *registry = config_bzlmod_registry(coswitch_name,
                                                  coswitch_root,
@@ -684,6 +758,7 @@ int main(int argc, char *argv[])
     //FIXME: add extras arg to pass extra info to pkg_handler
     findlib_map(opam_include_pkgs,
                 opam_exclude_pkgs,
+                switch_pfx,
                 switch_lib,
                 pkg_handler,
                 (void*)&paths);
@@ -694,6 +769,7 @@ int main(int argc, char *argv[])
     char *pkg_name; // , *p;
     for (pkg = paths.pkgs; pkg != NULL; pkg = pkg->hh.next) {
         pkg_name = strdup(pkg->name);
+        /* log_debug("regging PKG: %s", pkg_name); */
         /* for (p = pkg_name; *p; ++p) *p = tolower(*p); */
         /* if (verbosity > log_writes) */
         /*     log_debug(BLU " PKG %s" CRESET, pkg_name); */
@@ -758,6 +834,9 @@ int main(int argc, char *argv[])
         fprintf(stdout,
                 GRN "Switch prefix:    " CRESET
                 "%s\n", switch_pfx);
+        /* fprintf(stdout, */
+        /*         GRN "Coswitch root:    " CRESET */
+        /*         "%s\n", utstring_body(coswitch_root)); */
         fprintf(stdout,
                 GRN "Coswitch:         " CRESET
                 "%s\n", utstring_body(coswitch_pfx));
