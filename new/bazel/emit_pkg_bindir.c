@@ -248,7 +248,7 @@ void emit_opam_pkg_bindir(char *switch_pfx,
                           )
 {
     TRACE_ENTRY;
-    LOG_DEBUG(0, 0, "switch_pfx: %s", switch_pfx);
+    LOG_DEBUG(0, "switch_pfx: %s", switch_pfx);
     /* read dune-package file. if it exports executables:
        1. write bin/BUILD.bazel with a rule for each
        2. symlink from opam switch
@@ -540,7 +540,7 @@ EXPORT void emit_pkg_bindir(char *opam_switch_pfx,
     TRACE_ENTRY;
 #if defined(DEBUG_fastbuild)
     /* if (coswitch_trace) */
-    LOG_TRACE(0, 0, "emit_pkg_bindir: %s", pkg);
+    LOG_TRACE(0, "emit_pkg_bindir: %s", pkg);
 #endif
 
     utstring_renew(dune_pkg_file);

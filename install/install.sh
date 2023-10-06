@@ -1,5 +1,28 @@
 #!/usr/bin/env bash
 
+bin=$HOME/.local/bin
+
+while getopts "b:" o; do
+    case "${o}" in
+        b)
+            bin=${OPTARG}
+            ;;
+        *)
+            echo "Unrecognized option: ${o}"
+            exit
+            ;;
+    esac
+done
+shift $((OPTIND-1))
+
+if [[ -n "$@" ]]
+then
+    echo "Unrecognized arg: $@"
+    exit
+fi
+
+# echo "bin: ${bin}"
+
 # Copy-pasted from the Bazel Bash runfiles library v3.
 # https://github.com/bazelbuild/bazel/blob/master/tools/bash/runfiles/runfiles.bash
 
@@ -193,4 +216,4 @@ EXE=$(rlocation coswitch/new/new)
 # echo "EXE: ${EXE}"
 
 ## per xdg standard:
-install -Cv ${EXE} $HOME/.local/bin/coswitch
+install -C ${EXE} ${bin}/coswitch

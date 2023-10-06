@@ -102,17 +102,27 @@ enum OPTS {
 };
 
 void _print_usage(void) {
-    printf("Usage:\t$ bazel run @coswitch//new [flags, options]\n");
+    if (bazel_env) {
+        printf("Usage:\t$ bazel run @coswitch//new [args]\n");
+    } else {
+        printf("Usage:\t$ coswitch [args]\n");
+    }
 
-    printf("Flags\n");
+    printf("\t-s, --switch <name>\t\tOPAM switch to use. Default: current switch\n");
+
+    printf("\t-x, --xdg\t\t\tInstall coswitch to $XDG_DATA_HOME/obazl. Default: install to $OPAM_SWITCH_PREFIX/share/obazl\n");
+
+    /* printf("Flags\n"); */
     /* printf("\t-j, --jsoo\t\t\tImport Js_of_ocaml resources.\n"); */
     /* printf("\t-c, --clean\t\t\tClean coswitch and reset to uninitialized state. (temporarily disabled)\n"); */
+
+    printf("\t-q, --quiet\t\t\tSuppress all stdout msgs.\n");
+    printf("\t-v, --verbose\t\t\tEnable verbosity. Repeatable.\n");
 
 #if defined(DEBUG_fastbuild)
     printf("\t-d, --debug\t\t\tEnable debug flags. Repeatable.\n");
     printf("\t-t, --trace\t\t\tEnable all trace flags (debug only).\n");
 #endif
-    printf("\t-v, --verbose\t\t\tEnable verbosity. Repeatable.\n");
 }
 
 static struct option options[] = {
@@ -468,6 +478,13 @@ extern char **environ;
 
 int main(int argc, char *argv[])
 {
+    char *bws_dir = getenv("BUILD_WORKSPACE_DIRECTORY");
+    if (bws_dir) {
+        bazel_env = true;
+    } else {
+        bazel_env = false;
+    }
+
     argc = gopt(argv, options);
     (void)argc;
 
@@ -482,28 +499,28 @@ int main(int argc, char *argv[])
     /*     log_info("%s", environ[i++]); */
     /* } */
 
-    char *bws_dir = getenv("BUILD_WORKSPACE_DIRECTORY");
-    if (bws_dir) {
-        bazel_env = true;
-    } else {
-        bazel_env = false;
-    }
-
     /* char *launch_dir = getcwd(NULL,0); */
-    if (bazel_env) {
-        if (options[OPT_SWITCH].count) {
-            switch_name = options[OPT_SWITCH].argument;
-        } else {
-            switch_name = opam_switch_name();
-        }
-    } else{
-        if (options[OPT_SWITCH].count) {
-            log_warn("Ignoring -s %s",
-                     options[OPT_SWITCH].argument);
-        }
-        // chdir to switch root?
+    if (options[OPT_SWITCH].count) {
+        switch_name = options[OPT_SWITCH].argument;
+    } else {
         switch_name = opam_switch_name();
     }
+
+    /* if (bazel_env) { */
+    /*     if (options[OPT_SWITCH].count) { */
+    /*         switch_name = options[OPT_SWITCH].argument; */
+    /*     } else { */
+    /*         switch_name = opam_switch_name(); */
+    /*     } */
+    /* } else{ */
+    /*     if (options[OPT_SWITCH].count) { */
+    /*         log_warn("Ignoring -s %s", */
+    /*                  options[OPT_SWITCH].argument); */
+    /*     } */
+    /*     // chdir to switch root? */
+    /*     switch_name = opam_switch_name(); */
+    /* } */
+
     if (options[FLAG_QUIET].count) {
         quiet = true;
     }

@@ -352,7 +352,7 @@ UT_string *config_bzlmod_registry(char *switch_name,
         }
     }
     if (verbosity > 0)
-        log_info("module_base_path: %s",
+        log_info("bazel_registry.json module_base_path: %s",
                  utstring_body(module_base_path));
 
     char *bazel_registry_template = ""
