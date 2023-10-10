@@ -46,6 +46,8 @@ cc_binary(
         "-I$(@gopt)/src",
         "-I$(@liblogc)/src",
         "-I$(@uthash)/src",
+
+        "'-D$(MODULE_NAME)_VERSION=\"$(MODULE_VERSION)\"'"
     ],
     linkopts = [
         # "--verbose",

@@ -68,6 +68,7 @@ struct paths_s {
 
 /* UT_string *coswitch_runfiles_root; */
 
+const char *coswitch_version = COSWITCH_VERSION;
 char *default_version = "0.0.0";
 int   default_compat  = 0;
 char *bazel_compat    = "6.0.0";
@@ -96,6 +97,7 @@ enum OPTS {
     FLAG_TRACE_OPAMC,
 #endif
     FLAG_VERBOSE,
+    FLAG_VERSION,
     FLAG_QUIET,
     FLAG_HELP,
     LAST
@@ -118,6 +120,7 @@ void _print_usage(void) {
 
     printf("\t-q, --quiet\t\t\tSuppress all stdout msgs.\n");
     printf("\t-v, --verbose\t\t\tEnable verbosity. Repeatable.\n");
+    printf("\t    --version\t\t\tPrint version identifier.\n");
 
 #if defined(DEBUG_fastbuild)
     printf("\t-d, --debug\t\t\tEnable debug flags. Repeatable.\n");
@@ -159,6 +162,8 @@ static struct option options[] = {
 
     [FLAG_VERBOSE] = {.long_name="verbose",.short_name='v',
                       .flags=GOPT_ARGUMENT_FORBIDDEN | GOPT_REPEATABLE},
+    [FLAG_VERSION] = {.long_name="version",
+                      .flags=GOPT_ARGUMENT_FORBIDDEN },
     [FLAG_QUIET] = {.long_name="quiet",.short_name='q',
                     .flags=GOPT_ARGUMENT_FORBIDDEN},
     [FLAG_HELP] = {.long_name="help",.short_name='h',
@@ -492,6 +497,10 @@ int main(int argc, char *argv[])
 
     _set_options(options);
 
+    if (options[FLAG_VERSION].count) {
+        fprintf(stdout, "%s\n", coswitch_version);
+        exit(EXIT_SUCCESS);
+    }
     /* dump env vars: */
     /* log_debug("ENV"); */
     /* int i = 0; */
