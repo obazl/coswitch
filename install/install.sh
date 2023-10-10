@@ -2,10 +2,23 @@
 
 bin=$HOME/.local/bin
 
-while getopts "b:" o; do
+COPTS="-C"
+DOPTS="-d"
+
+while getopts "hvb:" o; do
     case "${o}" in
+        h)
+            echo "Usage: bazel run @coswitch//install"
+            echo "   option: -b <path> - install to <path>"
+            echo "   option: -v        - verbose"
+            exit
+            ;;
         b)
             bin=${OPTARG}
+            ;;
+        v)
+            COPTS="-Cv"
+            DOPTS="-dv"
             ;;
         *)
             echo "Unrecognized option: ${o}"
@@ -42,7 +55,7 @@ TDIR=$HOME/.local/share/obazl
 
 TSUB="templates/ocaml"
 T=${TDIR}/${TSUB}
-install -dv ${T}
+install ${DOPTS} ${T}
 
 files="ocaml_bigarray.BUILD \
       ocaml_bigarray_alias.BUILD \
@@ -71,13 +84,13 @@ do
     # echo "${F}"
     SRC=$(rlocation coswitch/new/${TSUB}/${F})
     # echo "SRC: ${SRC}"
-    install -Cv ${SRC} ${T}
+    install ${COPTS} ${SRC} ${T}
 done
 
 ################
 TSUB="templates/ocaml/compiler_libs"
 T=${TDIR}/${TSUB}
-install -dv ${T}
+install ${DOPTS} ${T}
 
 files="bytecomp.BUILD \
 common.BUILD \
@@ -90,13 +103,13 @@ do
     # echo "${F}"
     SRC=$(rlocation coswitch/new/${TSUB}/${F})
     # echo "SRC: ${SRC}"
-    install -Cv ${SRC} ${T}
+    install ${COPTS} ${SRC} ${T}
 done
 
 ################
 TSUB="templates/ocaml/runtime"
 T=${TDIR}/${TSUB}
-install -dv ${T}
+install ${DOPTS} ${T}
 
 files="runtime_sys.BUILD runtime_vm.BUILD"
 for F in $files
@@ -104,116 +117,120 @@ do
     # echo "${F}"
     SRC=$(rlocation coswitch/new/${TSUB}/${F})
     # echo "SRC: ${SRC}"
-    install -Cv ${SRC} ${T}
+    install ${COPTS} ${SRC} ${T}
 done
 
 ################
 TSUB="templates/platform"
 T=${TDIR}/${TSUB}
-install -dv ${T}
+install ${DOPTS} ${T}
 files="arch.BUILD emitter.BUILD executor.BUILD platform.BUILD"
 for F in $files
 do
     # echo "${F}"
     SRC=$(rlocation coswitch/new/${TSUB}/${F})
     # echo "SRC: ${SRC}"
-    install -Cv ${SRC} ${T}
+    install ${COPTS} ${SRC} ${T}
 done
 
 ################
 TSUB="templates/toolchain/adapters"
 T=${TDIR}/${TSUB}
-install -dv ${T}
+install ${DOPTS} ${T}
 files="local.BUILD"
 for F in $files
 do
     # echo "${F}"
     SRC=$(rlocation coswitch/new/${TSUB}/${F})
     # echo "SRC: ${SRC}"
-    install -Cv ${SRC} ${T}
+    install ${COPTS} ${SRC} ${T}
 done
 
 ################
 TSUB="templates/toolchain/adapters/linux"
 T=${TDIR}/${TSUB}
-install -dv ${T}
+install ${DOPTS} ${T}
 files="x86_64.BUILD arm.BUILD"
 for F in $files
 do
     # echo "${F}"
     SRC=$(rlocation coswitch/new/${TSUB}/${F})
     # echo "SRC: ${SRC}"
-    install -Cv ${SRC} ${T}
+    install ${COPTS} ${SRC} ${T}
 done
 
 ################
 TSUB="templates/toolchain/adapters/macos"
 T=${TDIR}/${TSUB}
-install -dv ${T}
+install ${DOPTS} ${T}
 files="x86_64.BUILD arm.BUILD"
 for F in $files
 do
     # echo "${F}"
     SRC=$(rlocation coswitch/new/${TSUB}/${F})
     # echo "SRC: ${SRC}"
-    install -Cv ${SRC} ${T}
+    install ${COPTS} ${SRC} ${T}
 done
 
 ################
 TSUB="templates/toolchain/profiles"
 T=${TDIR}/${TSUB}
-install -dv ${T}
+install ${DOPTS} ${T}
 files="profiles.BUILD"
 for F in $files
 do
     # echo "${F}"
     SRC=$(rlocation coswitch/new/${TSUB}/${F})
     # echo "SRC: ${SRC}"
-    install -Cv ${SRC} ${T}
+    install ${COPTS} ${SRC} ${T}
 done
 
 ################
 TSUB="templates/toolchain/selectors"
 T=${TDIR}/${TSUB}
-install -dv ${T}
+install ${DOPTS} ${T}
 files="local.BUILD"
 for F in $files
 do
     # echo "${F}"
     SRC=$(rlocation coswitch/new/${TSUB}/${F})
     # echo "SRC: ${SRC}"
-    install -Cv ${SRC} ${T}
+    install ${COPTS} ${SRC} ${T}
 done
 
 ################
 TSUB="templates/toolchain/selectors/linux"
 T=${TDIR}/${TSUB}
-install -dv ${T}
+install ${DOPTS} ${T}
 files="x86_64.BUILD arm.BUILD"
 for F in $files
 do
     # echo "${F}"
     SRC=$(rlocation coswitch/new/${TSUB}/${F})
     # echo "SRC: ${SRC}"
-    install -Cv ${SRC} ${T}
+    install ${COPTS} ${SRC} ${T}
 done
 
 ################
 TSUB="templates/toolchain/selectors/macos"
 T=${TDIR}/${TSUB}
-install -dv ${T}
+install ${DOPTS} ${T}
 files="x86_64.BUILD arm.BUILD"
 for F in $files
 do
     # echo "${F}"
     SRC=$(rlocation coswitch/new/${TSUB}/${F})
     # echo "SRC: ${SRC}"
-    install -Cv ${SRC} ${T}
+    install ${COPTS} ${SRC} ${T}
 done
+
+################
+WRAPPER=$(rlocation coswitch/new/templates/bazel_wrapper.sh)
+install ${COPTS} ${WRAPPER} ${TDIR}/templates
 
 ################
 EXE=$(rlocation coswitch/new/new)
 # echo "EXE: ${EXE}"
 
 ## per xdg standard:
-install -C ${EXE} ${bin}/coswitch
+install ${COPTS} ${EXE} ${bin}/coswitch

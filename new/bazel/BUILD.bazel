@@ -54,6 +54,7 @@ cc_library(
     ],
     local_defines = DEFINES,
     data  = [
+        "//new/templates:bazel_wrapper.sh",
         # WARNING: keep in sync with //opam/BUILD.bazel
         "//new/templates/ocaml:ocaml_bigarray.BUILD",
         "//new/templates/ocaml:ocaml_bigarray_alias.BUILD",

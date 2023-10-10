@@ -1,5 +1,7 @@
 exports_files(
-    glob(["**/*.BUILD", "**/*.BUILD.mustache"])
+    ["bazel_wrapper.sh"] + glob(
+        ["**/*.BUILD", "**/*.BUILD.mustache"]
+    )
 )
 
 filegroup(

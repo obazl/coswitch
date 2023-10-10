@@ -4,37 +4,63 @@ OBazl coswitch
 
 == Usage
 
-`@coswitch` only converts existing OPAM switches, so to use it you must install and configure a switch. See below for instructions.
+`@coswitch` only converts existing OPAM switches, so to use it you
+must install and configure a switch. See below for instructions. You
+must rerun coswitch whenever you change your switch (by installing or
+removing packages).
+
+Once you have installed a coswitch, you can express dependencies on
+OPAM packages by adding `bazel_dep` directives to your root
+`MODULE.bazel` file; for example:
+
+    bazel_dep(name = "alcotest",        version = "0.0.0")
+
+IMPORTANT: Version "0.0.0" is a dummy bzlmod version id; the
+dependency will resolve to whatever version is installed in OPAM.
+
+WARNING: If you add `bazel_dep` directives before you install the
+coswitch, you will run into a bootstrapping problem. Bazel will not be
+able to run or build any target because it will not be able resolve
+the `bazel_deps`. In particular it will not be able to run the `bazel
+run @coswitch//new` command needed to create the coswitch that will
+enable `bazel_dep` resolution. To avoid this you can install the
+`coswitch` executable on your PATH so you can run it independent of
+Bazel. See instructions below.
 
 === configuration
 
-You can run `@coswitch` from any directory equipped with the following files: `.bazelrc`, `MODULE.bazel`, and `WORKSPACE.bazel`.
+You can run `@coswitch` from any directory equipped with the following
+files: `.bazelrc`, `MODULE.bazel`, and `WORKSPACE.bazel`. If you
+install it locally, as described below, you can run it independent of Bazel.
 
 [source,title=".bazelrc"]
 ----
-common --enable_bzlmod                                      <1>
-common --registry=https://raw.githubusercontent.com/obazl/registry/main/        <2>
-common --registry=https://bcr.bazel.build                                       <3>
-try-import .config/user.bazelrc                                                 <4>
+common --enable_bzlmod                                                          <1>
+## common --registry=/path/to/coswitch/registry                                 <2>
+common --registry=https://raw.githubusercontent.com/obazl/registry/main/        <3>
+common --registry=https://bcr.bazel.build                                       <4>
+try-import .config/user.bazelrc                                                 <5>
 ----
 <1> Required.  The `common` prefix on these lines directs Bazel to use these directives for all commands (`build`, `test`, `run`, `query`).
-<1> `@coswitch` is not yet available in the link:https://github.com/bazelbuild/bazel-central-registry[Bazel Central Repository] (BRC)
-<2> URL for the BCR. Bazel automatically uses it _**if**_ no `--registry` directive is used; otherwise it must be explicitly required, as here.
-<3> Optional. Will be ignored if `.config/user.bazelrc` does not
+<2> Add this line _after_ running `$ bazel run @coswitch//new`
+<3> `@coswitch` is not yet available in the link:https://github.com/bazelbuild/bazel-central-registry[Bazel Central Repository] (BRC)
+<4> URL for the BCR. Bazel automatically uses it _**if**_ no `--registry` directive is used; otherwise it must be explicitly required, as here.
+<5> Optional. Will be ignored if `.config/user.bazelrc` does not
 exist. Do not put this file under version control. This allows each user to customize builds by adding Bazel directives. *Any file name can be used; .config/user.bazelrc is just an OBazl convention.*
 
 [source,title="MODULE.bazel"]
 ----
 module(
-    name = "mymodule",                    <1>
+    name = "mymodule",                               <1>
     version = "0.0.0",
     compatibility_level = 0,
-    bazel_compatibility = [">=6.0.0"]     <2>
+    bazel_compatibility = [">=6.0.0"]                <2>
 )
-bazel_dep(name = "coswitch", version = "1.0.0")
+bazel_dep(name = "coswitch", version = "x.y.z")      <3>
 ----
 <1> A common convention is to use the same name for the module and the basename of the root directory, but this is not a requirement.
 <2> The least Bazel version that supports Bazel modules (?)
+<3> See the Releases page for the latest version identifier.
 
 [source,title="WORKSPACE.bazel"]
 ----
@@ -47,21 +73,26 @@ This constraint will be removed in Bazel 7.0, due out in late 2023.
 
 ----
 $ bazel run @coswitch//new
-INFO: Analyzed target @coswitch~1.0.0//new:new (13 packages loaded, 56 targets configured).  <1>
-INFO: Found 1 target...
-Target @coswitch~1.0.0//new:new up-to-date:
-  .bazel/bin/external/coswitch~1.0.0/new/new
-INFO: Elapsed time: 1.516s, Critical Path: 0.25s
-INFO: 13 processes: 5 internal, 8 darwin-sandbox.
-INFO: Build completed successfully, 13 total actions
-INFO: Running command line: .bazel/bin/external/coswitch~1.0.0/new/new
-Switch name:   fiveone                                                         <2>
-Switch prefix: $HOME/.opam/fiveone                                             <2>
-Coswitch:      $HOME/.local/share/obazl/opam/fiveone                           <2>
-Registry:      $HOME/.local/share/obazl/registry/fiveone                       <2>
+INFO: Analyzed target @coswitch~override//new:new (7 packages loaded, 66 targets configured).
+INFO: Found 1 target...                                            <1>
+Target @coswitch~override//new:new up-to-date:
+  .bazel/bin/external/coswitch~override/new/new
+INFO: Elapsed time: 0.080s, Critical Path: 0.00s
+INFO: 1 process: 1 internal.
+INFO: Build completed successfully, 1 total action
+INFO: Running command line: .bazel/bin/external/coswitch~override/new/new
+Switch name:      4.14.0                                       <2>
+Compiler version: 4.14.0                                       <2>
+Switch prefix:    $HOME/.opam/4.14.0                           <2>
+Coswitch:         $HOME/.opam/4.14.0/share/obazl               <2>
+Registry:         $HOME/.opam/4.14.0/share/obazl               <2>
 ----
 <1> `INFO` messages are printed by Bazel
 <2> Printed by `@coswitch//new`  (with `$HOME` expanded)
+
+By default each coswitch is installed in the corresponding switch, in
+`$OPAM_SWITCH_PREFIX/share/obazl`. To instead install to
+`$XDG_DATA_HOME/obazl`, pass ` -- -x` or ` -- --xdg`.
 
 You can ask `@coswitch//new` to print more information by passing `-v` one or more times; such arguments must be passed _after_ `--`; for example:
 
@@ -79,13 +110,67 @@ To silence messages from Bazel you can use these directives (documented at link:
 ----
 <1> where <event> is one of: fatal, error, warning, info, progress, debug, start, finish, subcommand, stdout, stderr, pass, fail, timeout, cancelled or depchecker
 
+=== --registry directives
+
+Once you have configured a coswitch, you must tell Bazel to use it by
+passing a `--registry=` directive pointing to the coswitch. For example,
+
+    --registry=file:///home/<uid>/.opam/5.1.0/share/obazl
+
+You can pass this on the command line, but it will be more convenient
+to put it in a bazelrc file. One strategy is to put it in
+`.config/coswitch_registry.bazelrc`, and then add this to `.bazelrc` (as noted above):
+
+    try-import %workspace%/.config/coswitch_registry.bazelrc
+    common --registry=https://raw.githubusercontent.com/obazl/registry/main/
+    common --registry=https://bcr.bazel.build
+
+IMPORTANT: Order matters. The coswitch `--registry` directive should
+be first, and the directive for the BCR must come last.
+
+If you work with multiple OPAM switches, you will need to create a
+coswitch for each; then to change to use a different coswitch, edit
+your `--registry` directive.
+
+NOTE: Use of coswitches in this manner is independent of the "current"
+OPAM switch.
+
+For better integration with OPAM and the shell, you can use a shell
+script to wrap the bazel invocation. When you install coswitch, a
+sample script is installed at
+`$XDG_DATA_HOME/obazl/templates/bazel_wrapper.sh`. Copy this file to
+`tools/bazel` (it must be an executable named `bazel`). Now when you
+run a bazel command, control will be passed to this script, which runs
+`opam switch show` to discover the current switch, and then constructs
+the appropriate `--registry` directive and adds it to the bazel
+command.
+
+
+=== installation
+
+----
+$ bazel run @coswitch//install
+----
+
+This will install the coswitch executable to
+`$HOME/.local/bin/coswitch`; it will also install some template files
+to `$XDG_DATA_HOME/obazl/templates`.
+
+You can install the executable to a different directory by passing `
+-- -b /path/to/bindir`.
+
+Once you have installed `coswitch` on your local system you can remove
+its `bazel_dep` from your MODULE.bazel file, and run `$ coswitch`.
 
 == How It Works
 
 `@coswitch` converts `META` files in the OPAM switch to `BUILD.bazel`
 files in the Bazel "coswitch".  It also generates _bzlmod_ registry records.
 
-Both the coswitch and the registry are created in `$XDG_DATA_HOME/obazl`:
+By default, both the coswitch and the registry are created in
+`$OPAM_SWITCH_PREFIX/share/obazl`.
+
+If you pass `-- --xdg`, they are installed to `$XDG_DATA_HOME/obazl`:
 
     $XDG_DATA_HOME/obazl/opam/<switch name>
     $XDG_DATA_HOME/obazl/registry/<switch name>
@@ -98,7 +183,35 @@ For example, the coswitch record for package `yojson` of switch
 `fiveone` (as describe below in <<Creating an OPAM switch>>) looks like this:
 
 ----
-$ tree .local/share/obazl/opam/fiveone/lib/yojson
+~ $ tree .opam/fiveone/share/obazl/lib/yojson
+.opam/fiveone/share/obazl/lib/yojson
+├── MODULE.bazel
+├── WORKSPACE.bazel
+├── bin
+│   ├── BUILD.bazel
+│   └── ydump -> $HOME/.opam/fiveone/bin/ydump
+└── lib
+    └── yojson
+        ├── BUILD.bazel
+        ├── META -> $HOME/.opam/fiveone/lib/yojson/META
+        ├── dune-package -> $HOME/.opam/fiveone/lib/yojson/dune-package
+        ├── opam -> $HOME/.opam/fiveone/lib/yojson/opam
+        ├── yojson.a -> $HOME/.opam/fiveone/lib/yojson/yojson.a
+        ├── yojson.cma -> $HOME/.opam/fiveone/lib/yojson/yojson.cma
+        ├── yojson.cmi -> $HOME/.opam/fiveone/lib/yojson/yojson.cmi
+        ├── yojson.cmt -> $HOME/.opam/fiveone/lib/yojson/yojson.cmt
+        ├── yojson.cmti -> $HOME/.opam/fiveone/lib/yojson/yojson.cmti
+        ├── yojson.cmx -> $HOME/.opam/fiveone/lib/yojson/yojson.cmx
+        ├── yojson.cmxa -> $HOME/.opam/fiveone/lib/yojson/yojson.cmxa
+        ├── yojson.cmxs -> $HOME/.opam/fiveone/lib/yojson/yojson.cmxs
+        ├── yojson.ml -> $HOME/.opam/fiveone/lib/yojson/yojson.ml
+        └── yojson.mli -> $HOME/.opam/fiveone/lib/yojson/yojson.mli
+----
+
+If installed with ` -- --xdg`:
+
+----
+~ $ tree .local/share/obazl/opam/fiveone/lib/yojson
 .local/share/obazl/opam/fiveone/lib/yojson
 ├── MODULE.bazel
 ├── WORKSPACE.bazel
@@ -128,6 +241,19 @@ has this structure (documented at
 link:https://bazel.build/external/registry[Bazel registries]):
 
 ----
+$ tree -L 1 .opam/510a/share/obazl/
+.opam/510a/share/obazl/
+├── bazel_registry.json
+├── lib                        <1>
+└── modules                    <2>
+----
+<1> Contains coswitch package entries as described above
+<2> Contains bzlmod registry records
+
+
+With ` -- --xdg`:
+
+----
 $ tree -L 1 .local/share/obazl/registry/fiveone
 .local/share/obazl/registry/fiveone
 ├── bazel_registry.json
@@ -136,14 +262,25 @@ $ tree -L 1 .local/share/obazl/registry/fiveone
 
 The `bazel_registry.json` file points to the coswitch:
 
+..opam/fiveone/share/obazl/bazel_registry.json
 ----
 {
-    "mirrors": [],                                                           <1>
+    "mirrors": [],               <1>
+    "module_base_path": "lib"     <2>
+}
+----
+<1> Not used
+<2> Relative to cwd; serves as based dir for relative paths in registry records
+
+..local/share/obazl/registry/fiveone/bazel_registry.json
+----
+{
+    "mirrors": [],                                                       <1>
     "module_base_path": "$HOME/.local/share/obazl/opam/fiveone/lib"     <2>
 }
 ----
 <1> Not used
-<2> Registry records implicitly reference this base path
+<2> Registry records implicitly reference this base path (in this case, absolute path)
 
 The `modules` subdirectory contains one record per Bazel module. The record for `yojson`:
 
@@ -257,9 +394,6 @@ distribution itself.
 |===
 | Bazel pkg | Imports (by symlinks to <switch-prefix>)
 | `@ocaml//bin` |  `bin`
-| `@ocaml//lib/c:sdk` | headers and selected runtime (e.g. `lib/libasmrun.a`)
-| `@ocaml//lib/c/caml` | `lib/ocaml/caml`
-| `@ocaml//lib/c/lib` | `lib/ocaml`
 | `@ocaml//lib/compiler-libs` | `lib/ocaml/compiler-libs`
 | `@ocaml//lib/compiler-libs:bytecomp` |  `lib/ocaml/compiler-libs/ocamlbytecomp.cmx[a]`
 | `@ocaml//lib/compiler-libs:common` |  alias to `@ocaml//lib/compiler-libs:common`
@@ -268,6 +402,7 @@ distribution itself.
 | `@ocaml//lib/dynlink` | `lib/ocaml/dynlink`
 | `@ocaml//lib/ocamldoc` | `lib/ocaml/ocamldoc`
 | `@ocaml//lib/runtime` | `lib/ocaml` - stdlib, std_exit etc.
+| `@ocaml//lib/sdk` | C sdk headers `lib/ocaml/caml`
 | `@ocaml//lib/str` | `lib/ocaml`
 | `@ocaml//lib/stublibs` | `lib/ocaml`
 | `@ocaml//lib/threads` | `lib/ocaml/threads/threads.cmx[a]`
@@ -280,8 +415,7 @@ distribution itself.
 
 === Registry selection
 
-
-
+See section above on `--registry` directives.
 
 
 == Creating an OPAM switch
