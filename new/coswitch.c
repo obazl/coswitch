@@ -69,6 +69,8 @@ struct paths_s {
 /* UT_string *coswitch_runfiles_root; */
 
 const char *coswitch_version = COSWITCH_VERSION;
+extern char *findlibc_version;
+
 char *default_version = "0.0.0";
 int   default_compat  = 0;
 char *bazel_compat    = "6.0.0";
@@ -98,6 +100,7 @@ enum OPTS {
 #endif
     FLAG_VERBOSE,
     FLAG_VERSION,
+    FLAG_FINDLIBC_VERSION,
     FLAG_QUIET,
     FLAG_HELP,
     LAST
@@ -164,6 +167,8 @@ static struct option options[] = {
                       .flags=GOPT_ARGUMENT_FORBIDDEN | GOPT_REPEATABLE},
     [FLAG_VERSION] = {.long_name="version",
                       .flags=GOPT_ARGUMENT_FORBIDDEN },
+    [FLAG_FINDLIBC_VERSION] = {.long_name="findlibc-version",
+                               .flags=GOPT_ARGUMENT_FORBIDDEN },
     [FLAG_QUIET] = {.long_name="quiet",.short_name='q',
                     .flags=GOPT_ARGUMENT_FORBIDDEN},
     [FLAG_HELP] = {.long_name="help",.short_name='h',
@@ -499,6 +504,10 @@ int main(int argc, char *argv[])
 
     if (options[FLAG_VERSION].count) {
         fprintf(stdout, "%s\n", coswitch_version);
+        exit(EXIT_SUCCESS);
+    }
+    if (options[FLAG_FINDLIBC_VERSION].count) {
+        fprintf(stdout, "findlibc %s\n", findlibc_version);
         exit(EXIT_SUCCESS);
     }
     /* dump env vars: */

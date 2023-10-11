@@ -1160,6 +1160,218 @@ void emit_bazel_archive_attr(FILE* ostream,
             "    }, no_match_error=\"Bad platform\"),\n");
 }
 
+void emit_bazel_codeps_attr(FILE* ostream,
+                             int level, /* indentation control */
+                             /* char *_repo, */
+                             /* char *_pkg_path, */
+                             char *_pkg_prefix,
+                             char *_pkg_name,
+                             /* for constructing import label: */
+                             char *_filedeps_path, /* _lib */
+                             /* char *_subpkg_dir, */
+                             obzl_meta_entries *_entries,
+                            char *property, //'ppx_runtime_deps'
+                            obzl_meta_package *_pkg)
+{
+    (void)level;
+    (void)_pkg;
+    (void)_pkg_name;
+    (void)_filedeps_path;
+
+    LOG_DEBUG(0, "EMIT_BAZEL_CODEPS_ATTR _pkg_name: '%s'; prop: '%s'; filedeps path: '%s'",
+              _pkg_name, property, _filedeps_path);
+    LOG_DEBUG(0, "  pkg_prefix: %s", _pkg_prefix);
+
+    /* static UT_string *archive_srcfile; // FIXME: dealloc? */
+
+    LOG_DEBUG(0, "_filedeps_path: '%s'", _filedeps_path);
+
+    struct obzl_meta_property *deps_prop = obzl_meta_entries_property(_entries, property);
+    if ( deps_prop == NULL ) {
+        LOG_WARN(0, "Prop '%s' not found: %s.", property); //, pkg_name);
+        return;
+    }
+    /*
+      archive(byte) = "oUnit.cma"
+      archive(native) = "oUnit.cmxa"
+    */
+
+    obzl_meta_settings *settings = obzl_meta_property_settings(deps_prop);
+
+    int settings_ct = obzl_meta_settings_count(settings);
+#if defined(DEBUG_fastbuild)
+    LOG_INFO(0, "settings count: %d", settings_ct);
+#endif
+    if (settings_ct == 0) {
+#if defined(DEBUG_fastbuild)
+        LOG_INFO(0, "No settings for %s", obzl_meta_property_name(deps_prop));
+#endif
+        return;
+    }
+    UT_string *cmtag;  /* cma or cmxa */
+    utstring_new(cmtag);
+
+    obzl_meta_setting *setting = NULL;
+
+    obzl_meta_values *vals;
+    obzl_meta_value *archive_name = NULL;
+
+    /* lhs */
+    fprintf(ostream, "    archive  =  select({\n");
+            //level*spfactor, sp,
+            /* property); */
+
+    /* iter over archive(byte), archive(native) */
+    for (int i = 0; i < settings_ct; i++) {
+        setting = obzl_meta_settings_nth(settings, i);
+#if defined(DEBUG_fastbuild)
+        LOG_DEBUG(0, "setting[%d]", i+1);
+#endif
+        /* dump_setting(0, setting); */
+
+        obzl_meta_flags *flags = obzl_meta_setting_flags(setting);
+        /* for archive: 'byte', 'native' */
+
+        /* skip any setting with deprecated flag, e.g. 'vm' */
+        if (obzl_meta_flags_deprecated(flags)) {
+            /* LOG_DEBUG(0, "OMIT attribute with DEPRECATED flag"); */
+            continue;
+        }
+
+        /* if (flags != NULL) register_flags(flags); */
+
+        /* if (g_ppx_pkg) {        /\* set by opam_bootstrap.handle_lib_meta *\/ */
+        /* } */
+
+        vals = resolve_setting_values(setting, flags, settings);
+
+        bool has_conditions = false;
+        if (flags == NULL)
+            utstring_printf(cmtag, "//conditions:default");
+        else
+            /* updates cmtag */
+            /* maps: 'byte' => 'cma'; 'native' => 'cmxa' */
+            has_conditions = obzl_meta_flags_to_cmtag(flags, cmtag);
+
+        if (!has_conditions) {
+            goto next;          /* continue does not seem to exit loop */
+        }
+/* #if defined(DEBUG_fastbuild) */
+/*         LOG_DEBUG(0, "CMTAG: %s", utstring_body(cmtag)); */
+/* #endif */
+        if (settings_ct > 1) {
+            if (obzl_meta_values_count(vals) > 0) {
+                if (strncmp(utstring_body(cmtag), "cma", 4) == 0) {
+                    fprintf(ostream,
+                            "        "
+                            "\"@ocaml//platform/emitter:vm\" :");
+                    /* level*spfactor + 4, sp, */
+                    /* "@ocaml//platform/emitter:vm"); */
+                } else {
+                    fprintf(ostream,
+                            "        "
+                            "\"@ocaml//platform/emitter:sys\":");
+
+                    /* "\"//conditions:default\":        "); */
+                    /* level*spfactor + 4, sp, */
+                    /* "//conditions:default"); */
+                }
+                /* fprintf(ostream, "%*s%s", level*spfactor, sp, "archive"); */
+                /* fprintf(ostream, "%*s%s", level*spfactor, sp, */
+                /*         utstring_body(cmtag)); */
+            }
+        }
+        //else???
+
+        /* now we handle UPDATE settings */
+        /* vals = resolve_setting_values(setting, flags, settings); */
+        LOG_DEBUG(0, "setting values:", "");
+        /* dump_values(0, vals); */
+
+        /* now we construct a bazel label for each value */
+        UT_string *label;
+        utstring_new(label);
+/* #if defined(DEBUG_fastbuild) */
+/*         LOG_DEBUG(0, "vals ct: %d", obzl_meta_values_count(vals)); */
+/* #endif */
+        /* if (obzl_meta_values_count(vals) < 1) { */
+        /*     fprintf(ostream, "XXXXXXXXXXXXXXXX\n"); */
+        /* } */
+
+        /* for archive, should be only 1 value */
+        /* if (obzl_meta_values_count(vals) < 1) { */
+        /*     /\* fprintf(ostream, "  None\n"); // e.g. pkg core.top is vm only *\/ */
+        /* } else { */
+        if (obzl_meta_values_count(vals) > 0) {
+            for (int j = 0; j < obzl_meta_values_count(vals); j++) {
+                archive_name = obzl_meta_values_nth(vals, j);
+#if defined(DEBUG_fastbuild)
+                LOG_INFO(0, "prop[%d] '%s' == '%s'",
+                         j, property, (char*)*archive_name);
+#endif
+                utstring_clear(label);
+                if (_pkg_prefix == NULL) {
+                    utstring_printf(label,
+                                    "%s",
+                                    /* "@%s//%s", // filedeps path: %s", */
+                                    /* /\* _pkg_name, *\/ */
+                                    /* _filedeps_path, */
+                                    *archive_name);
+                } else {
+                    char *start = strchr(_pkg_prefix, '/');
+                    /* int repo_len = start - (char*)_pkg_prefix; */
+                    if (start == NULL) {
+                        utstring_printf(label,
+                                        "%s",
+                                        /* "@%.*s//%s:%s", // || PKG_pfx: %s", */
+                                        /* repo_len, */
+                                        /* _pkg_prefix, */
+                                        /* _pkg_name, */
+                                        *archive_name);
+                        /* _pkg_prefix); */
+                    } else {
+                        start++;
+                        utstring_printf(label,
+                                        "%s",
+                                        /* "@%.*s//%s/%s:%s", */
+                                        /* repo_len, */
+                                        /* _pkg_prefix, */
+                                        /* (char*)start, */
+                                        /* _pkg_name, */
+                                        *archive_name);
+                        /* _pkg_prefix); */
+                    }
+
+                    /* fprintf(ostream, "%*s\"@%.*s//%s\",\n", */
+                    /*         (1+level)*spfactor, sp, */
+                    /*         repo_len, */
+                    /*         *v, */
+                    /*         start+1); */
+
+                }
+                // FIXME: verify existence using access()?
+                int indent = 3;
+                if (strncmp(utstring_body(cmtag), "cmxa", 4) == 0)
+                    indent--;
+                if (settings_ct > 1) {
+                    fprintf(ostream, " \"%s\",\n",
+                            /* %*s */
+                            /* indent, sp, */
+                            utstring_body(label));
+                } else {
+                    fprintf(ostream, "5) %*s = \"%s\",\n",
+                            indent, sp, utstring_body(label));
+                }
+            }
+        }
+        utstring_free(label);
+    next:
+        ;
+    }
+    fprintf(ostream,
+            "    }, no_match_error=\"Bad platform\"),\n");
+}
+
 void emit_bazel_cmxs_attr(FILE* ostream,
                           int level, /* indentation control */
                           /* char *_repo, */
@@ -1545,6 +1757,12 @@ Note that "archive" should only be used for archive files that are intended to b
     /*                 "archive", */
     /*                 _pkg); */
 
+    //FIXME: only emit this if headers exist
+    fprintf(ostream, "\ncc_library(\n");
+    fprintf(ostream, "    name = \"hdrs\",\n");
+    fprintf(ostream, "    hdrs = glob([\"*.h\"])\n");
+    fprintf(ostream, ")\n\n");
+
     /* write scheme opam-resolver table */
     //FIXME: for here-switch only
     /* write_opam_resolver(_pkg_prefix, _pkg_name, _entries); */
@@ -1573,6 +1791,18 @@ Note that "archive" should only be used for archive files that are intended to b
                             _entries,
                             "archive",
                             _pkg);
+
+    /* emit_bazel_codeps_attr(ostream, 1, */
+    /*                         /\* ws_name, // ocaml_ws, *\/ */
+    /*                         /\* _pkg_path, *\/ */
+    /*                         _pkg_prefix, */
+    /*                         _pkg_name, */
+    /*                         /\* for constructing import label: *\/ */
+    /*                         _filedeps_path, */
+    /*                         /\* _subpkg_dir, *\/ */
+    /*                         _entries, */
+    /*                         "ppx_runtime_deps", */
+    /*                         _pkg); */
 
     /* fprintf(ostream, "    astructs    = select({\n" */
     /*         "        \"@ocaml//platform/emitter:vm\": glob([\"*.cmo\"]),\n" */
@@ -2980,6 +3210,54 @@ EXPORT void emit_module_file(UT_string *module_file,
             }
         }
     }
+
+    /* HACK ALERT! This hideous code deals with ppx_runtime_deps,
+       and must check to prevent duplicates.
+     */
+    char **already = NULL;      /* for searching */
+    if (pkg_deps) {
+        utarray_sort(pkg_deps,strsort);
+    }
+    UT_array *pkg_codeps = findlib_pkg_codeps(_pkg, true);
+    if (pkg_codeps) {
+        char **p = NULL;
+        struct obzl_meta_package *pkg;
+        /* LOG_DEBUG(0, "HASH CT: %d", HASH_COUNT(_pkgs)); */
+        /* exit(0); */
+        while ( (p=(char**)utarray_next(pkg_codeps, p))) {
+            if (strncmp(*p, _pkg->name, 512) != 0) {
+                HASH_FIND_STR(_pkgs, *p, pkg);
+                if (pkg) {
+                    free(semv);
+                    version[0] = '\0';
+                    semv = findlib_pkg_version(pkg);
+                    sprintf(version, "%d.%d.%d",
+                            semv->major, semv->minor, semv->patch);
+                } else {
+                    //FIXME: pkg 'compiler-libs' (a dep of
+                    // ppxlib.astlib etc.) is a pseudo-pkg,
+                    // referring to lib/ocaml/compiler-libs,
+                    // so it has neither pkg entry nor version
+                    if (strncmp(*p, "compiler-libs", 13) == 0) {
+                        sprintf(version, "%d.%d.%d", 0,0,0);
+                    } else {
+                        sprintf(version, "%d.%d.%d", -1, -1 , -1);
+                    }
+                }
+                if (pkg_deps) {
+                    already = NULL;
+                    already = (char**)utarray_find(pkg_deps, p, strsort);
+                    if (already == NULL) {
+                        fprintf(ostream, "bazel_dep(name = \"%s\", # %s\n",
+                                *p, version);
+                        fprintf(ostream, "          version = \"%s\") #codep\n",
+                                default_version);
+                    }
+                }
+            }
+        }
+    }
+
     fprintf(ostream, "\n");
 
     fclose(ostream);
@@ -2989,6 +3267,9 @@ EXPORT void emit_module_file(UT_string *module_file,
     }
     if (pkg_deps) {
         utarray_free(pkg_deps);
+    }
+    if (pkg_codeps) {
+        utarray_free(pkg_codeps);
     }
     TRACE_EXIT;
 }
