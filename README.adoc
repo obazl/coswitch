@@ -149,10 +149,10 @@ command.
 === installation
 
 ----
-$ bazel run @coswitch//install
+$ bazel run @coswitch//install -c opt
 ----
 
-This will install the coswitch executable to
+This will install an optimized build of the coswitch executable to
 `$HOME/.local/bin/coswitch`; it will also install some template files
 to `$XDG_DATA_HOME/obazl/templates`.
 
