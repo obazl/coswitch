@@ -646,8 +646,17 @@ int main(int argc, char *argv[])
                         xdg_data_home());
     }
     /* log_debug("RUNFILES_ROOT: %s", utstring_body(runfiles_root)); */
-    chdir(bws_dir);
-
+    if (bazel_env) {
+        errno = 0;
+        int rc = chdir(bws_dir);
+        if (rc < 0) {
+            fprintf(stderr,
+                    RED "ERROR" CRESET
+                    " %s:%d chdir(%s): %s\n",
+                    __FILE__, __LINE__,
+                    bws_dir, strerror(errno));
+        }
+    }
     /* if (!bazel_env) { */
     /*     // verify that we're running in opam context */
     /*     // cwd should be subdir of <switch-prefix>? */

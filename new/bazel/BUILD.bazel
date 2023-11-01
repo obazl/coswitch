@@ -56,7 +56,11 @@ cc_library(
 
         "-Wno-gnu-statement-expression-from-macro-expansion"
     ],
-    defines = PROFILE,
+    defines = PROFILE + select({
+        ## for dirent->d_type macros:
+        "@platforms//os:linux": ["_DEFAULT_SOURCE"],
+        "//conditions:default": []
+    }),
     data  = [
         "//new/templates:bazel_wrapper.sh",
         # WARNING: keep in sync with //opam/BUILD.bazel

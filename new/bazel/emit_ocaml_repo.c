@@ -99,9 +99,9 @@ void _emit_toplevel(UT_string *templates,
     }
     fprintf(ostream, "%s", utstring_body(content));
     fclose(ostream);
-    if (verbosity > log_writes)
+    if (verbosity > log_writes) {
         LOG_INFO(0, "wrote: %s", utstring_body(dst_file));
-
+    }
     utstring_renew(dst_file);
     utstring_printf(dst_file, "%s/WORKSPACE.bazel",
                     utstring_body(dst_dir));

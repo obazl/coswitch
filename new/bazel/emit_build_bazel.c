@@ -843,7 +843,7 @@ void emit_bazel_stublibs_attr(FILE* ostream,
                 /*         level*spfactor, sp, direntry->d_name); */
 
                 name_len = strlen(direntry->d_name);
-                (void)strncpy(strbuf, direntry->d_name, name_len);
+                memcpy(strbuf, direntry->d_name, 128);
                 strbuf[name_len] = '\0';
                 /* fprintf(ostream, "X %s\n", strbuf); */
 
@@ -2533,7 +2533,7 @@ void emit_bazel_ppx_codeps(FILE* ostream, int level,
             continue;
         }
 
-        bool has_conditions;
+        bool has_conditions = false;
         if (flags == NULL)
             utstring_printf(condition_name, "//conditions:default");
         else
@@ -3335,8 +3335,9 @@ void emit_pkg_symlinks(UT_string *opam_switch_lib,
             /* LOG_INFO(0, "XXXX configurator ptr: %s", ptr); */
             if (len > 20) {
                 if (strncmp(ptr, "lib/dune/configurator", 21) == 0) {
-                    if (verbosity > 2)
+                    if (verbosity > 2) {
                         LOG_WARN(0, "Skipping dune/configurator; use @dune-configurator instead.", "");
+                    }
                     return;
                 } else {
                     LOG_ERROR(0, "MISMATCH dune/configurator", "");
@@ -3345,9 +3346,10 @@ void emit_pkg_symlinks(UT_string *opam_switch_lib,
             /* } else { */
             /*     LOG_DEBUG(0, "configurator not dune/configurator"); */
             }
-        } else
+        } else {
             LOG_WARN(0, "pkg_symlinks: Unable to opendir %s",
                      utstring_body(opamdir));
+        }
         /* exit(EXIT_FAILURE); */
         /* this can happen if a related pkg is not installed */
         /* example, see topkg and topkg-care */

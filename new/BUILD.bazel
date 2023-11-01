@@ -51,7 +51,11 @@ cc_binary(
         # "--verbose",
         # "-v",
     ],
-    defines = PROFILE,
+    defines = PROFILE + select({
+        ## for realpath
+        "@platforms//os:linux": ["_XOPEN_SOURCE=500"],
+        "//conditions:default": []
+    }),
     local_defines = define_module_version(),
     linkstatic = 1,
     # toolchains = TOOLCHAINS,

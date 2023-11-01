@@ -83,8 +83,9 @@ EXPORT void emit_registry_record(UT_string *registry,
                                  struct obzl_meta_package *pkgs)
 {
     TRACE_ENTRY;
-    if (pkg)
+    if (pkg) {
         LOG_DEBUG(0, "%s", pkg->name);
+    }
     char *pkg_name;
     char *module_name;
     char version[256];
