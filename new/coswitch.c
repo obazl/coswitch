@@ -18,10 +18,10 @@
 #include "cwalk.h"
 #include "gopt.h"
 #include "libs7.h"
-#include "log.h"
+#include "liblogc.h"
 #include "findlibc.h"
 #include "opamc.h"
-#include "semver.h"
+/* #include "semver.h" */
 #include "utarray.h"
 #include "uthash.h"
 #include "utstring.h"
@@ -38,13 +38,20 @@ static UT_string *meta_path;
 static char *switch_name;
 static char *coswitch_name; // may be "local"
 
-#if defined(DEBUG_fastbuild)
-bool coswitch_trace;
-int  coswitch_debug;
+extern bool libs7_trace;
+extern int  libs7_debug;
+
+#if defined(PROFILE_fastbuild)
+#define DEBUG_LEVEL coswitch_debug
+int  DEBUG_LEVEL;
+#define TRACE_FLAG coswitch_trace
+bool TRACE_FLAG;
 extern bool findlibc_trace;
 extern int  findlibc_debug;
 extern bool opamc_trace;
 extern int  opamc_debug;
+extern bool xdgc_trace;
+extern int  xdgc_debug;
 #endif
 
 bool quiet;
@@ -90,7 +97,9 @@ enum OPTS {
     FLAG_XDG_INSTALL,
     FLAG_CLEAN,
     FLAG_SHOW_CONFIG,
-#if defined(DEBUG_fastbuild)
+    OPT_DEBUG_LIBS7,
+    FLAG_TRACE_LIBS7,
+#if defined(PROFILE_fastbuild)
     FLAG_DEBUG,
     FLAG_TRACE,
     OPT_DEBUG_FINDLIBC,
@@ -125,10 +134,14 @@ void _print_usage(void) {
     printf("\t-v, --verbose\t\t\tEnable verbosity. Repeatable.\n");
     printf("\t    --version\t\t\tPrint version identifier.\n");
 
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     printf("\t-d, --debug\t\t\tEnable debug flags. Repeatable.\n");
     printf("\t-t, --trace\t\t\tEnable all trace flags (debug only).\n");
 #endif
+
+    printf("\t    --debug-libs7\t\tEnable libs7 debug flags. Repeatable.\n");
+    printf("\t    --trace-libs7\t\tEnable libs7 trace flags.\n");
+
 }
 
 static struct option options[] = {
@@ -146,7 +159,12 @@ static struct option options[] = {
     [FLAG_SHOW_CONFIG] = {.long_name="show-config",
                           .flags=GOPT_ARGUMENT_FORBIDDEN},
 
-#if defined(DEBUG_fastbuild)
+    [OPT_DEBUG_LIBS7] = {.long_name="debug-libs7",
+                           .flags=GOPT_ARGUMENT_REQUIRED},
+    [FLAG_TRACE_LIBS7] = {.long_name="trace-libs7",
+                             .flags=GOPT_ARGUMENT_FORBIDDEN},
+
+#if defined(PROFILE_fastbuild)
     [FLAG_DEBUG] = {.long_name="debug",.short_name='d',
                     .flags=GOPT_ARGUMENT_FORBIDDEN | GOPT_REPEATABLE},
     [FLAG_TRACE] = {.long_name="trace",.short_name='t',
@@ -189,7 +207,22 @@ void _set_options(struct option options[])
         verbosity = options[FLAG_VERBOSE].count;
     }
 
-#if defined(DEBUG_fastbuild)
+    if (options[OPT_DEBUG_LIBS7].count) {
+        errno = 0;
+        long tmp = strtol(options[OPT_DEBUG_LIBS7].argument,
+                          NULL, 10);
+        if (errno) {
+            log_error( "--debug-libs7 must be an int.");
+            exit(EXIT_FAILURE);
+        } else {
+            libs7_debug = (int)tmp;
+        }
+    }
+    if (options[FLAG_TRACE_LIBS7].count) {
+        libs7_trace = true;
+    }
+
+#if defined(PROFILE_fastbuild)
     if (options[FLAG_DEBUG].count) {
         coswitch_debug = options[FLAG_DEBUG].count;
     }
@@ -202,8 +235,7 @@ void _set_options(struct option options[])
         long tmp = strtol(options[OPT_DEBUG_FINDLIBC].argument,
                           NULL, 10);
         if (errno) {
-            /* fprintf(stderr, "--findlib-debug must be an int."); */
-            log_error( "--findlib-debug must be an int.");
+            log_error( "--debug-findlibc must be an int.");
             exit(EXIT_FAILURE);
         } else {
             findlibc_debug = (int)tmp;
@@ -296,36 +328,36 @@ void pkg_handler(char *switch_pfx,
 
     if (pkg == NULL) {
         if ((errno == -1)
-                || (errno == -2)) {
+            || (errno == -2)) {
             empty_pkg = true;
-/* #if defined(TRACING) */
+            /* #if defined(TRACING) */
             if (verbosity > 2)
                 log_warn("Empty META file: %s", utstring_body(meta_path));
-/* #endif */
+            /* #endif */
             /* check dune-package for installed executables */
             /* chdir(old_cwd); */
 
-    pkg = (struct obzl_meta_package*)calloc(sizeof(struct obzl_meta_package), 1);
- char *fname = strdup(utstring_body(meta_path));
-    pkg->name      = package_name_from_file_name(fname);
-    /* pkg->name      = pkg_dir; */
-    char *x = strdup(pkg->name);
-    char *p;
-    // module names may not contain uppercase
-    for (p = x; *p; ++p) *p = tolower(*p);
-    pkg->module_name = strdup(x);
-    free(x);
-    x = strdup(fname);
-    pkg->path      = strdup(dirname(x));
-    free(x);
-    pkg->directory = pkg->name; // dirname(fname);
-    pkg->metafile  = utstring_body(meta_path);
-    pkg->entries = NULL;
+            pkg = (struct obzl_meta_package*)calloc(sizeof(struct obzl_meta_package), 1);
+            char *fname = strdup(utstring_body(meta_path));
+            pkg->name      = package_name_from_file_name(fname);
+            /* pkg->name      = pkg_dir; */
+            char *x = strdup(pkg->name);
+            char *p;
+            // module names may not contain uppercase
+            for (p = x; *p; ++p) *p = tolower(*p);
+            pkg->module_name = strdup(x);
+            free(x);
+            x = strdup(fname);
+            pkg->path      = strdup(dirname(x));
+            free(x);
+            pkg->directory = pkg->name; // dirname(fname);
+            pkg->metafile  = utstring_body(meta_path);
+            pkg->entries = NULL;
             /* return; */
-        /* } */
-        /* else if (errno == -2) { */
-        /*     log_warn("META file contains only whitespace: %s", utstring_body(meta_path)); */
-        /*     return; */
+            /* } */
+            /* else if (errno == -2) { */
+            /*     log_warn("META file contains only whitespace: %s", utstring_body(meta_path)); */
+            /*     return; */
         } else {
             log_error("Error parsing %s", utstring_body(meta_path));
             return;
@@ -552,6 +584,9 @@ int main(int argc, char *argv[])
 
     /* for reading dune-project files */
     s7 = libs7_init();
+
+    /* this uses dlsym to fine libdune_s7_init,
+     and should work with either static or dso lib */
     libs7_load_plugin(s7, "dune");
 
     /* coswitch_s7_init2(NULL, // options[OPT_MAIN].argument, */
@@ -585,7 +620,10 @@ int main(int argc, char *argv[])
     /* } */
 
     char *compiler_version = opam_switch_base_compiler_version(switch_name);
-
+    if (compiler_version == NULL) {
+        //FIXME: msg?
+        exit(EXIT_FAILURE);
+    }
     char *switch_pfx = opam_switch_prefix(switch_name);
 
     UT_string *runfiles_root;
@@ -808,7 +846,7 @@ int main(int argc, char *argv[])
         /* for (p = pkg_name; *p; ++p) *p = tolower(*p); */
         /* if (verbosity > log_writes) */
         /*     log_debug(BLU " PKG %s" CRESET, pkg_name); */
-        semver_t *version = findlib_pkg_version(pkg);
+        findlib_version_t *version = findlib_pkg_version(pkg);
         if (verbosity > 2) {
             log_debug("    version %d.%d.%d",
                       version->major, version->minor,

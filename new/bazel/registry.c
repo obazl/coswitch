@@ -1,12 +1,19 @@
 #include <errno.h>
 
-#include "log.h"
+#include "liblogc.h"
 #include "findlibc.h"
 #include "utstring.h"
 
 #include "registry.h"
 
 const char *platforms_version   = "0.0.7";
+
+#if defined(PROFILE_fastbuild)
+#define DEBUG_LEVEL coswitch_debug
+extern int  DEBUG_LEVEL;
+#define TRACE_FLAG coswitch_trace
+extern bool TRACE_FLAG;
+#endif
 
 void _emit_reg_rec(UT_string *reg_file, char *pkg_name)
 {
@@ -81,7 +88,7 @@ EXPORT void emit_registry_record(UT_string *registry,
     char *pkg_name;
     char *module_name;
     char version[256];
-    semver_t *semv;
+    findlib_version_t *semv;
     if (pkg) {
         pkg_name = pkg->name;
         module_name = pkg->module_name;
@@ -226,7 +233,7 @@ EXPORT void _emit_registry_record(UT_string *registry,
         emit_module_file(reg_file, compiler_version, pkg, pkgs);
     }
     // JUST FOR DEBUGGING:
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     if (pkg) {
         if (pkg->metafile) {
             utstring_new(reg_file);

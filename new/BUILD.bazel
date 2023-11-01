@@ -1,10 +1,12 @@
 load("//config/cc:CONFIG.bzl",
-     COPTS   = "BASE_COPTS",
-     DEFINES = "BASE_DEFINES")
+     "BASE_COPTS",
+     "BASE_LINKOPTS",
+     "PROFILE",
+     "define_module_version")
 
-load("@makeheaders//src:RULES.bzl", "makeheaders")
+load("@makeheaders//rules:makeheaders.bzl", "makeheaders")
 
-TOOLCHAINS = ["//:repo_paths"]
+# TOOLCHAINS = ["//:module_profiles"]
 
 exports_files(["coswitch.c"])
 
@@ -18,44 +20,41 @@ cc_binary(
     ],
     deps = [
         "@cwalk//src:cwalk",
-        "@findlibc//src:findlibc",
-        "@libs7//src:s7",
-        "@opamc//src:opamc",
-        "@xdgc//src:xdgc",
-        "@gopt//src:gopt",
-        "@liblogc//src:logc",
-        "@semverc//src:semverc",
-        "@uthash//src:uthash",
+        "@findlibc//lib:findlibc",
+        "@liblogc//lib:logc",
+        "@libs7//lib:s7",
+        "@opamc//lib:opamc",
+        "@xdgc//lib:xdgc",
+        "@gopt//lib:gopt",
+        # "@semverc//src:semverc",
+        # "@liblogc//lib:logc",
+        "@uthash//lib:uthash",
         "//new/bazel"
-   ],
-    copts = COPTS + [
-        "-I$(@libs7)/src",
-        "-I$(GENDIR)/$(@libs7)/src",
-
-        "-I$(GENDIR)/$(@findlibc)/src",
-        "-I$(GENDIR)/$(@opamc)/src",
-        "-I$(GENDIR)/$(@xdgc)/src",
-        "-I$(@semverc)/src",
-        "-I$(@)/src",
-        "-I$(GENDIR)/$(@)/src",
-        "-I$(GENDIR)/$(@)/new",
-        "-I$(GENDIR)/$(@)/src/opam",
-        "-I$(GENDIR)/$(@)/test/opam",
-
-        "-I$(@cwalk)/include",
-        "-I$(@gopt)/src",
-        "-I$(@liblogc)/src",
-        "-I$(@uthash)/src",
-
-        "'-D$(MODULE_NAME)_VERSION=\"$(MODULE_VERSION)\"'"
     ],
-    linkopts = [
+    copts = BASE_COPTS + [
+        # "-I$(@)/src",
+        # "-I$(GENDIR)/$(@)/src",
+        "-I$(GENDIR)/new",
+        # "-I$(GENDIR)/$(@)/src/opam",
+        # "-I$(GENDIR)/$(@)/test/opam",
+
+        # "-I$(@libs7)/src",
+        # "-I$(GENDIR)/$(@libs7)/src",
+
+        # "-I$(GENDIR)/$(@findlibc)/lib",
+        # # "-I$(@semverc)/src",
+        # "-I$(@cwalk)/include",
+        # "-I$(@gopt)/src",
+    ],
+    features = ["layering_check"],
+    linkopts = BASE_LINKOPTS + [
         # "--verbose",
         # "-v",
     ],
-    local_defines = DEFINES,
+    defines = PROFILE,
+    local_defines = define_module_version(),
     linkstatic = 1,
-    toolchains = TOOLCHAINS,
+    # toolchains = TOOLCHAINS,
 )
 
 ########
@@ -70,13 +69,21 @@ makeheaders(
         "//new/bazel:emit_pkg_bindir.c",
         "//new/bazel:registry.c",
         "//src/utils:utils.c",
-        "//src:ansi_colors.h",
+        "@makeheaders//logging:ansi_colors.h"
     ] + select({
-        "//config/profile:dev?": [
-            "//src:macros_debug.h",
+        "@makeheaders//compilation_mode:fastbuild": [
+            "@makeheaders//logging:macros_debug.h"
         ],
-        "//conditions:default":   [
-            "//src:macros_ndebug.h",
+        "//conditions:default": [
+            "@makeheaders//logging:macros_ndebug.h"
         ]
     }),
+    # ] + select({
+    #     "//config/profile:dev?": [
+    #         "//src:macros_debug.h",
+    #     ],
+    #     "//conditions:default":   [
+    #         "//src:macros_ndebug.h",
+    #     ]
+    # }),
 )

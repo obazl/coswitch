@@ -11,20 +11,22 @@
 #include "utarray.h"
 #include "utstring.h"
 
-#include "log.h"
+#include "liblogc.h"
 
 #include "emit_pkg_bindir.h"
 
 extern s7_scheme *s7;
 
-#if defined(DEBUG_fastbuild)
-extern int  coswitch_debug;
-extern bool coswitch_trace;
+#if defined(PROFILE_fastbuild)
+#define DEBUG_LEVEL coswitch_debug
+extern int  DEBUG_LEVEL;
+#define TRACE_FLAG coswitch_trace
+extern bool TRACE_FLAG;
 #endif
 
 /* extern UT_string *opam_switch_lib; */
 
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
 /* static char *tostr1 = NULL; */
 /* LOCAL char *tostr2 = NULL; */
 #define TO_STR(x) s7_object_to_c_string(s7, x)
@@ -41,7 +43,7 @@ extern bool coswitch_trace;
 extern int spfactor;
 extern char *sp;
 
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
 extern int indent;
 extern int delta;
 #endif
@@ -63,7 +65,7 @@ UT_array *_get_pkg_stublibs(s7_scheme *s7, char *pkg, void *_stanzas)
     (void)pkg;
 
     s7_pointer stanzas = (s7_pointer) _stanzas;
-/* #if defined(DEBUG_fastbuild) */
+/* #if defined(PROFILE_fastbuild) */
 /*     LOG_DEBUG(0, "stanzas: %s", TO_STR(stanzas)); */
 /* #endif */
 
@@ -96,7 +98,7 @@ UT_array *_get_pkg_stublibs(s7_scheme *s7, char *pkg, void *_stanzas)
         return stubs;
     }
 
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     if (coswitch_debug) {
         /* LOG_DEBUG(0, "Pkg: %s", utstring_body(dune_pkg_file)); */
         /// LOG_S7_DEBUG(0, "STUBLIBS", stublibs);
@@ -117,13 +119,13 @@ UT_array *_get_pkg_stublibs(s7_scheme *s7, char *pkg, void *_stanzas)
         //gc_loc = s7_gc_protect(s7, iter);
     if (!s7_is_iterator(iter)) {
         log_error("s7_is_iterator fail");
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
         /* LOG_S7_DEBUG(0, "not an iterator", iter); */
 #endif
     }
     if (s7_iterator_is_at_end(s7, iter)) {
         log_error("s7_iterator_is_at_end prematurely");
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
         /// LOG_S7_DEBUG(0, "iterator prematurely done", iter);
 #endif
     }
@@ -131,7 +133,7 @@ UT_array *_get_pkg_stublibs(s7_scheme *s7, char *pkg, void *_stanzas)
     while (true) {
         stublib_file = s7_iterate(s7, iter);
         if (s7_iterator_is_at_end(s7, iter)) break;
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
         /// LOG_S7_DEBUG(0, "stublib_file", stublib_file);
 #endif
         f = s7_object_to_c_string(s7, stublib_file);
@@ -177,7 +179,7 @@ UT_array *_get_pkg_executables(s7_scheme *s7, void *_stanzas)
         return bins;
     }
 
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     if (coswitch_debug) {
         /* LOG_DEBUG(0, "Pkg: %s", utstring_body(dune_pkg_file)); */
         /// LOG_S7_DEBUG(0, "executables", executables);
@@ -193,13 +195,13 @@ UT_array *_get_pkg_executables(s7_scheme *s7, void *_stanzas)
         //gc_loc = s7_gc_protect(s7, iter);
     if (!s7_is_iterator(iter)) {
         log_error("s7_make_iterator failed");
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
         /// LOG_S7_DEBUG(0, "not an iterator", iter);
 #endif
     }
     if (s7_iterator_is_at_end(s7, iter)) {
         log_error("s7_iterator_is_at_end prematurely");
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
         /// LOG_S7_DEBUG(0, "iterator prematurely done", iter);
 #endif
     }
@@ -207,7 +209,7 @@ UT_array *_get_pkg_executables(s7_scheme *s7, void *_stanzas)
     while (true) {
         binfile = s7_iterate(s7, iter);
         if (s7_iterator_is_at_end(s7, iter)) break;
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
         /// LOG_S7_DEBUG(0, "binfile", binfile);
 #endif
         f = s7_object_to_c_string(s7, binfile);
@@ -300,12 +302,12 @@ void emit_opam_pkg_bindir(char *switch_pfx,
     utstring_printf(outpath, "%s/%s/WORKSPACE.bazel",
                     coswitch_lib,
                     pkg);
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     if (coswitch_debug)
         LOG_DEBUG(0, "checking ws: %s", utstring_body(outpath));
 #endif
     if (access(utstring_body(outpath), F_OK) != 0) {
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
         LOG_DEBUG(0, "creating %s\n", utstring_body(outpath));
 #endif
         /* if obazl/pkg not exist, create it with WORKSPACE */
@@ -332,7 +334,7 @@ void emit_opam_pkg_bindir(char *switch_pfx,
                     coswitch_lib,
                     pkg);
     /* rc = access(utstring_body(build_bazel_file), F_OK); */
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     LOG_DEBUG(0, "fopening: %s", utstring_body(outpath));
 #endif
 
@@ -354,7 +356,7 @@ void emit_opam_pkg_bindir(char *switch_pfx,
     /* For each executable, create symlink and exports_files entry */
     char **p = NULL;
     while ( (p=(char**)utarray_next(executables,p))) {
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
         LOG_DEBUG(0, "bin: %s",*p);
 #endif
         fprintf(ostream, "\"%s\",", *p);
@@ -364,7 +366,7 @@ void emit_opam_pkg_bindir(char *switch_pfx,
                         switch_pfx,
                         /* utstring_body(switch_bin), */
                         *p);
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
         LOG_DEBUG(0, "SYMLINK SRC: %s", utstring_body(opam_bin));
 #endif
         utstring_renew(outpath);
@@ -372,7 +374,7 @@ void emit_opam_pkg_bindir(char *switch_pfx,
                         coswitch_lib,
                         pkg,
                         *p);
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
         LOG_DEBUG(0, "SYMLINK DST: %s", utstring_body(outpath));
 #endif
         int rc = symlink(utstring_body(opam_bin),
@@ -429,13 +431,13 @@ void emit_opam_pkg_bindir(char *switch_pfx,
                     coswitch_lib,
                     pkg);
 
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     /* if (coswitch_debug) */
         LOG_DEBUG(0, "checking ws: %s", utstring_body(outpath));
 #endif
     if (access(utstring_body(outpath), F_OK) != 0) {
         LOG_DEBUG(0, "creating %s\n", utstring_body(outpath));
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
 #endif
         /* if obazl/pkg not exist, create it with WORKSPACE */
         /* utstring_renew(outpath); */
@@ -459,7 +461,7 @@ void emit_opam_pkg_bindir(char *switch_pfx,
                     coswitch_lib,
                     pkg);
     /* rc = access(utstring_body(build_bazel_file), F_OK); */
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     LOG_DEBUG(0, "fopening: %s", utstring_body(outpath));
 #endif
 
@@ -481,7 +483,7 @@ void emit_opam_pkg_bindir(char *switch_pfx,
     /* For each stublib, create symlink and exports_files entry */
     p = NULL;
     while ( (p=(char**)utarray_next(stublibs,p))) {
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
         LOG_DEBUG(0, "stublib: %s",*p);
 #endif
         fprintf(ostream, "\"%s\",", *p);
@@ -490,7 +492,7 @@ void emit_opam_pkg_bindir(char *switch_pfx,
         utstring_printf(opam_stublib, "%s/lib/stublibs/%s",
                         switch_pfx,
                         *p);
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
         LOG_DEBUG(0, "SYMLINK SRC: %s", utstring_body(opam_stublib));
 #endif
         utstring_renew(outpath);
@@ -498,7 +500,7 @@ void emit_opam_pkg_bindir(char *switch_pfx,
                         coswitch_lib,
                         pkg,
                         *p);
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
         LOG_DEBUG(0, "SYMLINK DST: %s", utstring_body(outpath));
 #endif
         int rc = symlink(utstring_body(opam_stublib),
@@ -538,7 +540,7 @@ EXPORT void emit_pkg_bindir(char *opam_switch_pfx,
                             const char *pkg)
 {
     TRACE_ENTRY;
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     /* if (coswitch_trace) */
     LOG_TRACE(0, "emit_pkg_bindir: %s", pkg);
 #endif
@@ -549,7 +551,7 @@ EXPORT void emit_pkg_bindir(char *opam_switch_pfx,
                     opam_switch_pfx, /* global */
                     pkg);
 
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     if (coswitch_trace)
         LOG_DEBUG(0, "CHECKING DUNE-PACKAGE: %s\n", utstring_body(dune_pkg_file));
 #endif

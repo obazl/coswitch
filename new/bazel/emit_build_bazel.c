@@ -23,9 +23,9 @@
 /* #include "s7.h" */
 /* #endif */
 
-#include "log.h"
+#include "liblogc.h"
 /* #if EXPORT_INTERFACE */
-#include "semver.h"
+/* #include "semver.h" */
 #include "utarray.h"
 #include "utstring.h"
 /* #endif */
@@ -45,9 +45,11 @@ extern char *sp;
 extern int log_writes;
 extern int log_symlinks;
 
-#if defined(DEBUG_fastbuild)
-extern int  coswitch_debug;
-extern bool coswitch_trace;
+#if defined(PROFILE_fastbuild)
+#define DEBUG_LEVEL coswitch_debug
+extern int  DEBUG_LEVEL;
+#define TRACE_FLAG coswitch_trace
+extern bool TRACE_FLAG;
 extern int indent;
 extern int delta;
 #endif
@@ -272,7 +274,7 @@ void emit_local_repo_decl(FILE *bootstrap_FILE,
                           char *pkg_name)
                           /* struct obzl_meta_package *_pkg) */
 {
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     LOG_DEBUG(0, "emit_local_repo_decl %s", pkg_name); //_pkg->name);
 #endif
 
@@ -336,7 +338,7 @@ void emit_bazel_hdr(FILE* ostream)
 /*                                          obzl_meta_flags *_flags, */
 /*                                          obzl_meta_settings *_settings) */
 /* { */
-/* #if defined(DEBUG_fastbuild) */
+/* #if defined(PROFILE_fastbuild) */
 /*     LOG_DEBUG(0, "resolve_setting_values, opcode: %d", _setting->opcode); */
 /* #endif */
 /*     obzl_meta_values * vals = obzl_meta_setting_values(_setting); */
@@ -383,7 +385,7 @@ void emit_bazel_hdr(FILE* ostream)
 /*             obzl_meta_flag *setting_flag = obzl_meta_flags_nth(setting_flags, 0); */
 /*             if (setting_flag->polarity == a_flag->polarity) { */
 /*                 if (strncmp(setting_flag->s, a_flag->s, 32) == 0) { */
-/* #if defined(DEBUG_fastbuild) */
+/* #if defined(PROFILE_fastbuild) */
 /*                     LOG_DEBUG(0, "matched flag"); */
 /* #endif */
 /*                     /\* we have found a setting with exactly one flag, that matches the search flag *\/ */
@@ -415,7 +417,7 @@ void emit_bazel_attribute(FILE* ostream,
                           obzl_meta_package *_pkg)
 {
     (void)_pkg;
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     LOG_DEBUG(0, "EMIT_BAZEL_ATTRIBUTE _pkg_name: '%s'; prop: '%s'; filedeps path: '%s'",
               _pkg_name, property, _filedeps_path);
     LOG_DEBUG(0, "  pkg_prefix: %s", _pkg_prefix);
@@ -777,7 +779,7 @@ void emit_bazel_stublibs_attr(FILE* ostream,
     (void)_filedeps_path;
     (void)_pkg;
     /* here we read the symlinks in the coswitch not the opam switch */
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     LOG_DEBUG(0, "stublibs pkg root: '%s'", _pkg_root);
     LOG_DEBUG(0, "stublibs pkg prefix: '%s'", _pkg_prefix);
     LOG_DEBUG(0, "stublibs pkg name: '%s'", _pkg_name);
@@ -801,7 +803,7 @@ void emit_bazel_stublibs_attr(FILE* ostream,
     /* LOG_DEBUG(0, "pkgname: %s", _pkg_name); */
     utstring_printf(dname, "/%s", _pkg_name);
 
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     LOG_DEBUG(0, "emit_bazel_stublibs_attr: %s",
               utstring_body(dname));
 #endif
@@ -887,7 +889,7 @@ void emit_bazel_jsoo_runtime_attr(FILE* ostream,
     (void)_filedeps_path;
     (void)_pkg;
     /* here we read the symlinks in the coswitch not the opam switch */
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     LOG_DEBUG(0, "jsoo pkg root: %s", _pkg_root);
     LOG_DEBUG(0, "jsoo pkg prefix: %s", _pkg_prefix);
     LOG_DEBUG(0, "jsoo pkg name: %s", _pkg_name);
@@ -905,7 +907,7 @@ void emit_bazel_jsoo_runtime_attr(FILE* ostream,
         utstring_printf(dname, "/%s", utstring_body(_pkg_parent));
     utstring_printf(dname, "/%s", _pkg_name);
 
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     LOG_DEBUG(0, "emit_bazel_jsoo_runtime_attr: %s", utstring_body(dname));
 #endif
 
@@ -987,11 +989,11 @@ void emit_bazel_archive_attr(FILE* ostream,
     obzl_meta_settings *settings = obzl_meta_property_settings(deps_prop);
 
     int settings_ct = obzl_meta_settings_count(settings);
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     LOG_INFO(0, "settings count: %d", settings_ct);
 #endif
     if (settings_ct == 0) {
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
         LOG_INFO(0, "No settings for %s", obzl_meta_property_name(deps_prop));
 #endif
         return;
@@ -1012,7 +1014,7 @@ void emit_bazel_archive_attr(FILE* ostream,
     /* iter over archive(byte), archive(native) */
     for (int i = 0; i < settings_ct; i++) {
         setting = obzl_meta_settings_nth(settings, i);
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
         LOG_DEBUG(0, "setting[%d]", i+1);
 #endif
         /* dump_setting(0, setting); */
@@ -1044,7 +1046,7 @@ void emit_bazel_archive_attr(FILE* ostream,
         if (!has_conditions) {
             goto next;          /* continue does not seem to exit loop */
         }
-/* #if defined(DEBUG_fastbuild) */
+/* #if defined(PROFILE_fastbuild) */
 /*         LOG_DEBUG(0, "CMTAG: %s", utstring_body(cmtag)); */
 /* #endif */
         if (settings_ct > 1) {
@@ -1079,7 +1081,7 @@ void emit_bazel_archive_attr(FILE* ostream,
         /* now we construct a bazel label for each value */
         UT_string *label;
         utstring_new(label);
-/* #if defined(DEBUG_fastbuild) */
+/* #if defined(PROFILE_fastbuild) */
 /*         LOG_DEBUG(0, "vals ct: %d", obzl_meta_values_count(vals)); */
 /* #endif */
         /* if (obzl_meta_values_count(vals) < 1) { */
@@ -1093,7 +1095,7 @@ void emit_bazel_archive_attr(FILE* ostream,
         if (obzl_meta_values_count(vals) > 0) {
             for (int j = 0; j < obzl_meta_values_count(vals); j++) {
                 archive_name = obzl_meta_values_nth(vals, j);
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
                 LOG_INFO(0, "prop[%d] '%s' == '%s'",
                          j, property, (char*)*archive_name);
 #endif
@@ -1199,11 +1201,11 @@ void emit_bazel_codeps_attr(FILE* ostream,
     obzl_meta_settings *settings = obzl_meta_property_settings(deps_prop);
 
     int settings_ct = obzl_meta_settings_count(settings);
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     LOG_INFO(0, "settings count: %d", settings_ct);
 #endif
     if (settings_ct == 0) {
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
         LOG_INFO(0, "No settings for %s", obzl_meta_property_name(deps_prop));
 #endif
         return;
@@ -1224,7 +1226,7 @@ void emit_bazel_codeps_attr(FILE* ostream,
     /* iter over archive(byte), archive(native) */
     for (int i = 0; i < settings_ct; i++) {
         setting = obzl_meta_settings_nth(settings, i);
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
         LOG_DEBUG(0, "setting[%d]", i+1);
 #endif
         /* dump_setting(0, setting); */
@@ -1256,7 +1258,7 @@ void emit_bazel_codeps_attr(FILE* ostream,
         if (!has_conditions) {
             goto next;          /* continue does not seem to exit loop */
         }
-/* #if defined(DEBUG_fastbuild) */
+/* #if defined(PROFILE_fastbuild) */
 /*         LOG_DEBUG(0, "CMTAG: %s", utstring_body(cmtag)); */
 /* #endif */
         if (settings_ct > 1) {
@@ -1291,7 +1293,7 @@ void emit_bazel_codeps_attr(FILE* ostream,
         /* now we construct a bazel label for each value */
         UT_string *label;
         utstring_new(label);
-/* #if defined(DEBUG_fastbuild) */
+/* #if defined(PROFILE_fastbuild) */
 /*         LOG_DEBUG(0, "vals ct: %d", obzl_meta_values_count(vals)); */
 /* #endif */
         /* if (obzl_meta_values_count(vals) < 1) { */
@@ -1305,7 +1307,7 @@ void emit_bazel_codeps_attr(FILE* ostream,
         if (obzl_meta_values_count(vals) > 0) {
             for (int j = 0; j < obzl_meta_values_count(vals); j++) {
                 archive_name = obzl_meta_values_nth(vals, j);
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
                 LOG_INFO(0, "prop[%d] '%s' == '%s'",
                          j, property, (char*)*archive_name);
 #endif
@@ -1389,7 +1391,7 @@ void emit_bazel_cmxs_attr(FILE* ostream,
     (void)_pkg;
     (void)_pkg_name;
     (void)_filedeps_path;
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     LOG_DEBUG(0, BLU "EMIT_BAZEL_CMXS_ATTR" CRESET, "");
     LOG_DEBUG(0, "\t_pkg_name: '%s'", _pkg_name);
     LOG_DEBUG(0, "\tprop: '%s'", property);
@@ -1431,11 +1433,11 @@ void emit_bazel_cmxs_attr(FILE* ostream,
     obzl_meta_settings *settings = obzl_meta_property_settings(deps_prop);
 
     int settings_ct = obzl_meta_settings_count(settings);
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     LOG_INFO(0, "settings count: %d", settings_ct);
 #endif
     if (settings_ct == 0) {
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
         LOG_INFO(0, "No settings for %s", obzl_meta_property_name(deps_prop));
 #endif
         return;
@@ -1513,7 +1515,7 @@ void emit_bazel_cmxs_attr(FILE* ostream,
 
         /* now we handle UPDATE settings */
         vals = resolve_setting_values(setting, flags, settings);
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
         LOG_DEBUG(0, "setting values:", "");
 #endif
         /* dump_values(0, vals); */
@@ -1524,7 +1526,7 @@ void emit_bazel_cmxs_attr(FILE* ostream,
 
         for (int j = 0; j < obzl_meta_values_count(vals); j++) {
             archive_name = obzl_meta_values_nth(vals, j);
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
             LOG_INFO(0, "\tprop[%d] '%s' == '%s'",
                      j, property, (char*)*archive_name);
 #endif
@@ -1723,7 +1725,7 @@ void emit_bazel_archive_rule(FILE* ostream,
                              obzl_meta_package *_pkg)
 {
     (void)level;
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     LOG_DEBUG(0, "EMIT_BAZEL_ARCHIVE_RULE: _filedeps_path: %s", _filedeps_path);
 #endif
     /* http://projects.camlcity.org/projects/dl/findlib-1.9.1/doc/ref-html/r759.html
@@ -1888,7 +1890,7 @@ void emit_bazel_plugin_rule(FILE* ostream, int level,
     (void)level;
     (void)_repo;
     TRACE_ENTRY;
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     LOG_DEBUG(0, BLU "EMIT_BAZEL_PLUGIN_RULE:" CRESET " _filedeps_path: %s", _filedeps_path);
     LOG_DEBUG(0, "pkg_pfx: %s", _pkg_prefix);
     LOG_DEBUG(0, "_pkg_name: %s", _pkg_name);
@@ -1976,14 +1978,14 @@ void emit_bazel_plugin_rule(FILE* ostream, int level,
 bool emit_special_case_rule(FILE* ostream,
                             obzl_meta_package *_pkg)
 {
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     LOG_TRACE(0, "emit_special_case_rule pkg: %s", _pkg->name);
 #endif
 
     if ((strncmp(_pkg->name, "bigarray", 8) == 0)
         && strlen(_pkg->name) == 8) {
 
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
         LOG_TRACE(0, "emit_special_case_rule: %s", "bigarrray");
 #endif
 
@@ -1997,7 +1999,7 @@ bool emit_special_case_rule(FILE* ostream,
 
     if ((strncmp(_pkg->name, "dynlink", 7) == 0)
         && strlen(_pkg->name) == 7) {
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
         LOG_TRACE(0, "emit_special_case_rule: %s",  "dynlink");
 #endif
 
@@ -2019,7 +2021,7 @@ bool emit_special_case_rule(FILE* ostream,
 
     if ((strncmp(_pkg->name, "compiler-libs", 13) == 0)
         && strlen(_pkg->name) == 13) {
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
         LOG_TRACE(0, "emit_special_case_rule: %s", "compiler-libs");
 #endif
 
@@ -2035,7 +2037,7 @@ bool emit_special_case_rule(FILE* ostream,
     // if lib/ctypes-foreign exists
     if ((strncmp(_pkg->name, "foreign", 7) == 0)
         && strlen(_pkg->name) == 7) {
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
         LOG_TRACE(0, "emit_special_case_rule: %s", "ctypes.foreign");
 #endif
 
@@ -2073,7 +2075,7 @@ bool emit_special_case_rule(FILE* ostream,
 
     if ((strncmp(_pkg->name, "num", 3) == 0)
         && strlen(_pkg->name) == 3) {
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
         LOG_TRACE(0, "emit_special_case_rule: %s", "num");
 #endif
 
@@ -2087,7 +2089,7 @@ bool emit_special_case_rule(FILE* ostream,
 
     if ((strncmp(_pkg->name, "ocamldoc", 8) == 0)
         && strlen(_pkg->name) == 8) {
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
         LOG_TRACE(0, "emit_special_case_rule: %s", "ocamldoc");
 #endif
 
@@ -2101,7 +2103,7 @@ bool emit_special_case_rule(FILE* ostream,
 
     if ((strncmp(_pkg->name, "str", 3) == 0)
         && strlen(_pkg->name) == 3) {
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
         LOG_TRACE(0, "emit_special_case_rule: %s", "str");
 #endif
         /* fprintf(ostream, "xxxxxxxxxxxxxxxx"); */
@@ -2115,7 +2117,7 @@ bool emit_special_case_rule(FILE* ostream,
 
     if ((strncmp(_pkg->name, "threads", 7) == 0)
         && strlen(_pkg->name) == 7) {
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
         LOG_TRACE(0, "emit_special_case_rule: %s", "threads");
 #endif
 
@@ -2129,7 +2131,7 @@ bool emit_special_case_rule(FILE* ostream,
 
     if ((strncmp(_pkg->name, "unix", 4) == 0)
         && strlen(_pkg->name) == 4) {
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
         LOG_TRACE(0, "emit_special_case_rule: %s", "unix");
 #endif
 
@@ -2470,7 +2472,7 @@ void emit_bazel_ppx_codeps(FILE* ostream, int level,
     //FIXME: skip if no 'requires'
     /* obzl_meta_entries *entries = obzl_meta_package_entries(_pkg); */
 
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     LOG_DEBUG(0, "emit_bazel_ppx_codeps, repo: %s, pfx: %s, pkg: %s",
               repo, _pkg_prefix, _pkg_name);
 #endif
@@ -2482,7 +2484,7 @@ void emit_bazel_ppx_codeps(FILE* ostream, int level,
     struct obzl_meta_property *deps_prop = obzl_meta_entries_property(_entries, "ppx_runtime_deps");
     if ( deps_prop == NULL ) {
         /* char *pkg_name = obzl_meta_package_name(_pkg); */
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
         LOG_WARN(0, "Prop 'ppx_runtime_deps' not found for pkg: %s.",
                  _pkg_name);
 #endif
@@ -2744,7 +2746,7 @@ void emit_bazel_deps_target(FILE* ostream, int level,
                                obzl_meta_entries *_entries)
 {
     (void)level;
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     LOG_DEBUG(0, "DUMMY %s", _pkg_name);
 #endif
 
@@ -2797,7 +2799,7 @@ void emit_bazel_error_target(FILE* ostream, int level,
 {
     (void)level;
     (void)_pkg_src;
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     LOG_DEBUG(0, "ERROR TARGET: %s", _pkg_name);
 #endif
     fprintf(ostream, "\nocaml_import( # error\n");
@@ -2975,7 +2977,7 @@ void emit_bazel_subpackages(// char *ws_name,
 {
     (void)level;
     TRACE_ENTRY;
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     LOG_DEBUG(0, BLU "EMIT_BAZEL_SUBPACKAGES" CRESET " pkg: %s", _pkg->name);
     /* LOG_DEBUG(0, "\tws_name: %s", ws_name); */
     LOG_DEBUG(0, "\t_coswitch_lib: %s", coswitch_lib);
@@ -2987,7 +2989,7 @@ void emit_bazel_subpackages(// char *ws_name,
 #endif
 
     obzl_meta_entries *entries = _pkg->entries;
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     LOG_DEBUG(0, "entries ct: %d", obzl_meta_entries_count(entries));
 #endif
 
@@ -3008,7 +3010,7 @@ void emit_bazel_subpackages(// char *ws_name,
         utstring_printf(pkg_parent, "%s", pkg_name);
     }
 
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     LOG_DEBUG(0, "starting level: %d", newlevel);
 #endif
     /* UT_string *filedeps_path; */
@@ -3044,7 +3046,7 @@ void emit_bazel_subpackages(// char *ws_name,
             /* } */
         }
     }
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     LOG_DEBUG(0, "Finished level: %d", newlevel);
 #endif
     /*  restore */
@@ -3140,7 +3142,7 @@ EXPORT void emit_module_file(UT_string *module_file,
                              struct obzl_meta_package *_pkgs)
 {
     TRACE_ENTRY_MSG("%s", _pkg->name);
-    semver_t *semv;
+    findlib_version_t *semv;
     char version[256];
     semv = findlib_pkg_version(_pkg);
     sprintf(version, "%d.%d.%d",
@@ -3280,14 +3282,14 @@ void emit_pkg_symlinks(UT_string *opam_switch_lib,
                        char *pkg_name)
 {
     TRACE_ENTRY;
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     if (verbosity > 1)
         LOG_DEBUG(0, "  pkg name: %s", pkg_name);
 #endif
 
 /*     if ((strncmp(pkg_name, "dune", 4) == 0)) { */
 /*         || (strncmp(utstring_body(src_dir), "dune/configurator", 17) == 0)) { */
-/* #if defined(DEBUG_fastbuild) */
+/* #if defined(PROFILE_fastbuild) */
 /*         if (coswitch_debug) */
 /*             LOG_DEBUG(0, "Skipping 'dune' stuff\n"); */
 /* #endif */
@@ -3310,7 +3312,7 @@ void emit_pkg_symlinks(UT_string *opam_switch_lib,
     utstring_new(dst);
     int rc;
 
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     LOG_DEBUG(0, "opening src_dir for read: %s", utstring_body(opamdir));
 #endif
     DIR *d = opendir(utstring_body(opamdir));
@@ -3356,7 +3358,7 @@ void emit_pkg_symlinks(UT_string *opam_switch_lib,
     while ((direntry = readdir(d)) != NULL) {
         //Condition to check regular file.
         if(direntry->d_type==DT_REG){ // or symlink?
-/* #if defined(DEBUG_fastbuild) */
+/* #if defined(PROFILE_fastbuild) */
 /*             if (coswitch_debug) { */
 /*                 LOG_DEBUG(0, "dirent: %s/%s", */
 /*                           utstring_body(opamdir), direntry->d_name); */
@@ -3375,7 +3377,7 @@ void emit_pkg_symlinks(UT_string *opam_switch_lib,
                             utstring_body(dst_dir),
                             pkg_name,
                             direntry->d_name);
-/* #if defined(DEBUG_fastbuild) */
+/* #if defined(PROFILE_fastbuild) */
 /*             if (coswitch_debug) { */
                 /* LOG_DEBUG(0, "pkg symlinking"); */
                 /* fprintf(stderr, "  from %s\n", utstring_body(src)); */
@@ -3430,7 +3432,7 @@ EXPORT void emit_build_bazel(// char *ws_name,
 {
     TRACE_ENTRY;
     /* ENTRY */
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     LOG_INFO(0, "\tpkg: %s", obzl_meta_package_name(_pkg));
     LOG_INFO(0, "\tpkg->name: %s", obzl_meta_package_name(_pkg));
     LOG_INFO(0, "\tcoswitch_lib: %s", coswitch_lib);
@@ -3468,7 +3470,7 @@ EXPORT void emit_build_bazel(// char *ws_name,
     /* } */
 
     char *pkg_name = obzl_meta_package_name(_pkg);
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     /* log_set_quiet(false); */
     /* LOG_DEBUG(0, "%*sparsed name: %s", indent, sp, pkg_name); */
     /* LOG_DEBUG(0, "%*spkg dir:  %s", indent, sp, obzl_meta_package_dir(_pkg)); */
@@ -3484,35 +3486,35 @@ EXPORT void emit_build_bazel(// char *ws_name,
 
 /*     if (_pkg_suffix == NULL) { */
 /*         if (pfxdir == NULL) { */
-/* #if defined(DEBUG_fastbuild) */
+/* #if defined(PROFILE_fastbuild) */
 /*             LOG_DEBUG(0, "NULL NULL"); */
 /* #endif */
 /*             utstring_printf(build_bazel_file, "%s/%s", coswitch_lib, pkg_name); */
 /*         } else { */
-/* #if defined(DEBUG_fastbuild) */
+/* #if defined(PROFILE_fastbuild) */
 /*             LOG_DEBUG(0, "NULL NOTNULL"); */
 /* #endif */
 /*             utstring_printf(build_bazel_file, "%s/%s", coswitch_lib, pfxdir); */
 /*         } */
 /*     } else { */
-/* #if defined(DEBUG_fastbuild) */
+/* #if defined(PROFILE_fastbuild) */
 /*         LOG_DEBUG(0, "_pkg_suffix != NULL"); */
 /* #endif */
 /*         if (pfxdir == NULL) { */
-/* #if defined(DEBUG_fastbuild) */
+/* #if defined(PROFILE_fastbuild) */
 /*             LOG_DEBUG(0, "pfxdir == NULL"); */
 /* #endif */
 /*             utstring_printf(build_bazel_file, "%s/%s", */
 /*                             coswitch_lib, _pkg_suffix); */
 /*         } else { */
-/* #if defined(DEBUG_fastbuild) */
+/* #if defined(PROFILE_fastbuild) */
 /*             LOG_DEBUG(0, "NOTNULL NOTNULL"); */
 /* #endif */
 /*             utstring_printf(build_bazel_file, "%s/%s/%s", */
 /*                             coswitch_lib, pfxdir, _pkg_suffix); */
 /*         } */
 /*     } */
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     LOG_DEBUG(0, "build_bazel_file: %s", utstring_body(build_bazel_file));
 #endif
     /* printf("_PKG_SUFFIX: %s\n", _pkg_suffix); */
@@ -3523,11 +3525,11 @@ EXPORT void emit_build_bazel(// char *ws_name,
     UT_string *new_filedeps_path = NULL;
     utstring_renew(new_filedeps_path);
     char *directory = obzl_meta_directory_property(entries);
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     LOG_DEBUG(0, "DIRECTORY property: '%s'", directory);
 #endif
     if ( directory == NULL ) {
-/* #if defined(DEBUG_fastbuild) */
+/* #if defined(PROFILE_fastbuild) */
 /*         LOG_DEBUG(0, "AAAA"); */
 /* #endif */
         /* directory omitted or directory = "" */
@@ -3536,7 +3538,7 @@ EXPORT void emit_build_bazel(// char *ws_name,
     } else {
         /* utstring_printf(build_bazel_file, "/%s", subpkg_dir); */
         if ( strncmp(directory, "+", 1) == 0 ) {
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
             LOG_DEBUG(0, "BBBB", "");
 #endif
             /* Initial '+' means 'relative to stdlib dir', i.e. these
@@ -3545,7 +3547,7 @@ EXPORT void emit_build_bazel(// char *ws_name,
                threads, threads/posix, ocamldoc.
             */
             /* stdlib = true; */
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
             LOG_DEBUG(0, "Found STDLIB directory '%s' for %s", directory, pkg_name);
 #endif
             directory++;
@@ -3576,7 +3578,7 @@ EXPORT void emit_build_bazel(// char *ws_name,
                                     "ocaml/%s",
                                     directory);
                 /* utstring_printf(new_filedeps_path, "_lib/%s", "ocaml"); */
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
                 LOG_DEBUG(0, "Found STDLIB root directory for %s: '%s' => '%s'",
                           pkg_name, directory, utstring_body(new_filedeps_path));
 #endif
@@ -3586,7 +3588,7 @@ EXPORT void emit_build_bazel(// char *ws_name,
             }
         }
     }
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     LOG_DEBUG(0, "new_filedeps_path: %s", utstring_body(new_filedeps_path));
 #endif
 
@@ -3649,7 +3651,7 @@ EXPORT void emit_build_bazel(// char *ws_name,
     /*                         _pkg_suffix, */
     /*                         _pkg); */
 
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     LOG_DEBUG(0, "fopening for write: %s", utstring_body(build_bazel_file));
 #endif
 
@@ -3674,13 +3676,13 @@ EXPORT void emit_build_bazel(// char *ws_name,
         || ((strncmp(_pkg_suffix, "ocaml", 5) == 0) )) {
             /* && (strlen(_pkg_suffix) == 5))) */
         if (emit_special_case_rule(ostream, _pkg)) {
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
             LOG_TRACE(0, "+emit_special_case_rule:TRUE", "");
             LOG_TRACE(0, "\tpkg suffix: %s", _pkg_suffix);
             LOG_TRACE(0, "\tpkg name: %s", _pkg->name);
 #endif
             return;
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
             LOG_TRACE(0, "-emit_special_case_rule:FALSE %s", _pkg->name);
 #endif
         }
@@ -3689,7 +3691,7 @@ EXPORT void emit_build_bazel(// char *ws_name,
     if (strncmp(_pkg_root, "ctypes", 6) == 0) {
         if (strncmp(_pkg->name, "foreign", 7) == 0) {
             if (emit_special_case_rule(ostream, _pkg)) {
-                /* #if defined(DEBUG_fastbuild) */
+                /* #if defined(PROFILE_fastbuild) */
                 /* LOG_TRACE(0, "emit_special_case_rule:TRUE %s", _pkg->name); */
                 /* #endif */
                 return;
@@ -3899,7 +3901,7 @@ EXPORT void emit_build_bazel(// char *ws_name,
                     break;
                 }
 
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
                 LOG_WARN(0, "processing other property: %s", e->property->name);
 #endif
                 /* dump_entry(0, e); */

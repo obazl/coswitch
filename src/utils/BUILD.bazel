@@ -1,10 +1,11 @@
 load("//config/cc:CONFIG.bzl",
-     COPTS   = "BASE_COPTS",
-     DEFINES = "BASE_DEFINES")
+     "BASE_COPTS",
+     "BASE_LINKOPTS",
+     "PROFILE")
 
-load("@makeheaders//src:RULES.bzl", "makeheaders")
+load("@makeheaders//rules:makeheaders.bzl", "makeheaders")
 
-TOOLCHAINS = ["//:repo_paths"]
+# TOOLCHAINS = ["//:module_profiles"]
 
 exports_files(["utils.c"])
 
@@ -17,21 +18,22 @@ cc_library(
         ":mkhdrs",
         # "//src/hdrs:coswitch.h",
     ],
+    includes = ["."],
     deps = [
-        "@liblogc//src:logc",
-        "@uthash//src:uthash"
+        "@liblogc//lib:logc",
+        "@uthash//lib:uthash"
 
-        # "@findlibc//src:findlibc",
-        # "@opamc//src:opamc",
-        # "@xdgc//src:xdgc",
+        # "@findlibc//lib:findlibc",
+        # "@opamc//lib:opamc",
+        # "@xdgc//lib:xdgc",
         # "@gopt//src:gopt",
         # "@libs7//src:s7",
-        # "@liblogc//src:logc",
+        # "@liblogc//lib:logc",
    ],
-    copts = COPTS + [
-        "-I$(@liblogc)/src",
-        "-I$(@uthash)/src",
-        "-I$(GENDIR)/$(@)/src/utils"
+    copts = BASE_COPTS + [
+        # "-I$(@liblogc)/src",
+        # "-I$(@uthash)/src",
+        # "-I$(GENDIR)/$(@)/src/utils"
 
         # "-I$(GENDIR)/$(@findlibc)/src",
         # "-I$(GENDIR)/$(@opamc)/src",
@@ -41,9 +43,9 @@ cc_library(
         # "-I$(@)/src",
         # "-I$(GENDIR)/$(@)/new",
     ],
-    local_defines = DEFINES,
+    defines = PROFILE,
     linkstatic = 1,
-    toolchains = TOOLCHAINS,
+    # toolchains = TOOLCHAINS,
 )
 
 ################
@@ -51,14 +53,24 @@ makeheaders(
     name = "mkhdrs",
     hdrs_srcs = ["utils.c"],
     additional_srcs = [
-        "//src:ansi_colors.h",
+        "@makeheaders//logging:ansi_colors.h"
     ] + select({
-        "//config/compilation_mode:fastbuild?": [
-            "//src:macros_debug.h",
+        "@makeheaders//compilation_mode:fastbuild": [
+            "@makeheaders//logging:macros_debug.h"
         ],
-        "//conditions:default":   [
-            "//src:macros_ndebug.h",
+        "//conditions:default": [
+            "@makeheaders//logging:macros_ndebug.h"
         ]
-    })
+    }),
+ # [
+ #        "//src:ansi_colors.h",
+ #    ] + select({
+ #        "//config/compilation_mode:fastbuild?": [
+ #            "//src:macros_debug.h",
+ #        ],
+ #        "//conditions:default":   [
+ #            "//src:macros_ndebug.h",
+ #        ]
+ #    })
 )
 

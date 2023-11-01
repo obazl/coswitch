@@ -2,10 +2,17 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include "log.h"
+#include "liblogc.h"
 #include "utstring.h"
 
 #include "utils.h"
+
+#if defined(PROFILE_fastbuild)
+#define DEBUG_LEVEL coswitch_debug
+extern int  DEBUG_LEVEL;
+#define TRACE_FLAG coswitch_trace
+extern bool TRACE_FLAG;
+#endif
 
 EXPORT void copy_buildfile(char *src_file, UT_string *to_file)
 {

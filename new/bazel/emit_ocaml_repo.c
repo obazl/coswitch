@@ -13,7 +13,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "log.h"
+#include "liblogc.h"
 #include "findlibc.h"
 #include "opamc.h"
 #include "utarray.h"
@@ -42,7 +42,11 @@ extern UT_string *opam_ocaml_version;
 /* extern UT_string *opam_switch_lib; */
 /* extern UT_string *coswitch_runfiles_root; */
 
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
+#define DEBUG_LEVEL coswitch_debug
+extern int  DEBUG_LEVEL;
+#define TRACE_FLAG coswitch_trace
+extern bool TRACE_FLAG;
 bool coswitch_debug_symlinks = false;
 #endif
 
@@ -166,7 +170,7 @@ void emit_ocaml_stdlib_pkg(char *runfiles,
                     switch_lib);
     int rc = access(utstring_body(stdlib_dir), F_OK);
     if (rc != 0) {
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
         /* if (coswitch_trace) */
         LOG_WARN(0, YEL "NOT FOUND: %s",
                  utstring_body(stdlib_dir));
@@ -177,7 +181,7 @@ void emit_ocaml_stdlib_pkg(char *runfiles,
                         switch_lib);
         int rc = access(utstring_body(stdlib_dir), F_OK);
         if (rc != 0) {
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
             /* if (coswitch_trace) */
             LOG_WARN(0, YEL "NOT FOUND: %s",
                      utstring_body(stdlib_dir));
@@ -185,12 +189,12 @@ void emit_ocaml_stdlib_pkg(char *runfiles,
             utstring_free(stdlib_dir);
             return;
         } else {
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
             LOG_WARN(0, YEL "FOUND: %s", utstring_body(stdlib_dir));
 #endif
             add_toplevel = true;
         }
-/* #if defined(DEBUG_fastbuild) */
+/* #if defined(PROFILE_fastbuild) */
 /*     } else { */
 /*         LOG_WARN(0, YEL "FOUND: %s", utstring_body(stdlib_dir)); */
 /* #endif */
@@ -548,7 +552,7 @@ void _emit_ocaml_stublibs_symlinks(char *switch_pfx,
                     /* tgtdir); */
     mkdir_r(utstring_body(dst_dir));
 
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     LOG_DEBUG(0, "stublibs src_dir: %s\n", utstring_body(src_dir));
     LOG_DEBUG(0, "stublibs dst_dir: %s\n", utstring_body(dst_dir));
 #endif
@@ -559,7 +563,7 @@ void _emit_ocaml_stublibs_symlinks(char *switch_pfx,
     utstring_new(dst_file);
     int rc;
 
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     LOG_DEBUG(0, "opening src_dir for read: %s\n",
               utstring_body(src_dir));
 #endif
@@ -577,7 +581,7 @@ void _emit_ocaml_stublibs_symlinks(char *switch_pfx,
     struct dirent *direntry;
     while ((direntry = readdir(srcd)) != NULL) {
         //Condition to check regular file.
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
         if (coswitch_debug)
             LOG_DEBUG(0, "stublib: %s, type %d",
                       direntry->d_name, direntry->d_type);
@@ -650,7 +654,7 @@ void emit_lib_stublibs_pkg(UT_string *registry,
                     switch_stublibs);
     int rc = access(utstring_body(switch_stublibs_dir), F_OK);
     if (rc != 0) {
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
         /* if (coswitch_trace) */
         LOG_WARN(0, YEL "no stublibs dir found: %s",
                  utstring_body(switch_stublibs_dir));
@@ -788,7 +792,7 @@ void _emit_lib_stublibs_symlinks(char *switch_stublibs,
     utstring_new(dst);
     int rc;
 
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     LOG_DEBUG(0, "opening src_dir for read: %s",
               utstring_body(src_dir));
 #endif
@@ -810,7 +814,7 @@ void _emit_lib_stublibs_symlinks(char *switch_stublibs,
     struct dirent *direntry;
     while ((direntry = readdir(srcd)) != NULL) {
         //Condition to check regular file.
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
         /* if (coswitch_debug_symlinks) { */
             LOG_DEBUG(0, "stublib: %s, type %d",
                       direntry->d_name, direntry->d_type);
@@ -830,7 +834,7 @@ void _emit_lib_stublibs_symlinks(char *switch_stublibs,
             utstring_printf(dst, "%s/%s",
                             utstring_body(dst_dir), direntry->d_name);
 
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
             /* if (coswitch_debug_symlinks) { */
                 LOG_DEBUG(0, "stublibs: symlinking %s to %s",
                           utstring_body(src),
@@ -1172,7 +1176,7 @@ void _emit_ocaml_bin_symlinks(char *opam_switch_pfx,
 
     mkdir_r(utstring_body(dst_dir));
 
-/* #if defined(DEBUG_fastbuild) */
+/* #if defined(PROFILE_fastbuild) */
 /*     /\* if (coswitch_debug) { *\/ */
 /*     LOG_DEBUG(0, "opam pfx: %s", opam_switch_pfx); */
 /*         LOG_DEBUG(0, "dst_dir: %s", utstring_body(dst_dir)); */
@@ -1188,7 +1192,7 @@ void _emit_ocaml_bin_symlinks(char *opam_switch_pfx,
     UT_string *opam_switch_bin;
     utstring_new(opam_switch_bin);
     utstring_printf(opam_switch_bin, "%s/bin", opam_switch_pfx);
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     if (verbosity > 3)
         LOG_DEBUG(0, "opening src_dir for read: %s",
                   utstring_body(opam_switch_bin));
@@ -1274,7 +1278,7 @@ void _emit_ocaml_bin_symlinks(char *opam_switch_pfx,
 /*         return; */
 /*     } */
 
-/* #if defined(DEBUG_fastbuild) */
+/* #if defined(PROFILE_fastbuild) */
 /*     if (coswitch_debug) { */
 /*         LOG_DEBUG(0, "c_libs: symlinking %s to %s\n", */
 /*                   utstring_body(src), */
@@ -1327,7 +1331,7 @@ void emit_ocaml_bigarray_pkg(char *runfiles,
                     switch_lib);
     int rc = access(utstring_body(bigarray_dir), F_OK);
     if (rc != 0) {
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
         /* if (coswitch_trace) */
         LOG_WARN(0, YEL "NOT FOUND: %s",
                  utstring_body(bigarray_dir));
@@ -1335,7 +1339,7 @@ void emit_ocaml_bigarray_pkg(char *runfiles,
         utstring_free(bigarray_dir);
         // v >= 5.0.0 does not include any bigarray archive
         return;
-/* #if defined(DEBUG_fastbuild) */
+/* #if defined(PROFILE_fastbuild) */
 /*     } else { */
 /*         LOG_WARN(0, YEL "FOUND: %s", utstring_body(bigarray_dir)); */
 /* #endif */
@@ -1388,7 +1392,7 @@ void _symlink_ocaml_bigarray(UT_string *bigarray_dir,
                              char *tgtdir)
 {
     TRACE_ENTRY;
-/* #if defined(DEBUG_fastbuild) */
+/* #if defined(PROFILE_fastbuild) */
 /*     /\* if (coswitch_debug_symlinks) *\/ */
 /*     if (verbosity > 2) { */
 /*         LOG_DEBUG(0, "src: %s, dst: %s", */
@@ -1652,7 +1656,7 @@ void _symlink_ocaml_compiler_libs(char *switch_lib,
                                   /* char *tgtdir) */
 {
     TRACE_ENTRY;
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     /* LOG_DEBUG(0, "src: %s, dst: %s, tgt: %s", */
     /*           switch_lib, coswitch_lib); //, tgtdir); */
 #endif
@@ -1725,7 +1729,7 @@ void emit_ocaml_dynlink_pkg(char *runfiles,
                     switch_lib);
     int rc = access(utstring_body(dynlink_dir), F_OK);
     if (rc != 0) {
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
         /* if (coswitch_trace) */
         LOG_WARN(0, YEL "NOT FOUND: %s",
                  utstring_body(dynlink_dir));
@@ -1736,7 +1740,7 @@ void emit_ocaml_dynlink_pkg(char *runfiles,
                         switch_lib);
         int rc = access(utstring_body(dynlink_dir), F_OK);
         if (rc != 0) {
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
             /* if (coswitch_trace) */
             LOG_WARN(0, YEL "NOT FOUND: %s",
                      utstring_body(dynlink_dir));
@@ -1744,12 +1748,12 @@ void emit_ocaml_dynlink_pkg(char *runfiles,
             utstring_free(dynlink_dir);
             return;
         } else {
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
             LOG_WARN(0, YEL "FOUND: %s", utstring_body(dynlink_dir));
 #endif
             add_toplevel = true;
         }
-/* #if defined(DEBUG_fastbuild) */
+/* #if defined(PROFILE_fastbuild) */
 /*     } else { */
 /*         LOG_WARN(0, YEL "FOUND: %s", utstring_body(dynlink_dir)); */
 /* #endif */
@@ -1815,7 +1819,7 @@ void emit_ocaml_dynlink_pkg(char *runfiles,
 void _symlink_ocaml_dynlink(UT_string *dynlink_dir, char *tgtdir)
 {
     TRACE_ENTRY;
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     if (verbosity > 2) {
         LOG_DEBUG(0, "src: %s, dst: %s",
                   utstring_body(dynlink_dir), tgtdir);
@@ -1891,13 +1895,13 @@ void emit_ocaml_num_pkg(char *runfiles,
                     switch_lib);
     int rc = access(utstring_body(num_dir), F_OK);
     if (rc != 0) {
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
         /* if (coswitch_trace) */
         LOG_WARN(0, YEL "NOT FOUND: %s",
                  utstring_body(num_dir));
 #endif
         return;
-/* #if defined(DEBUG_fastbuild) */
+/* #if defined(PROFILE_fastbuild) */
 /*     } else { */
 /*         LOG_WARN(0, YEL "FOUND: %s", utstring_body(num_dir)); */
 /* #endif */
@@ -1908,7 +1912,7 @@ void emit_ocaml_num_pkg(char *runfiles,
 /*     utstring_printf(dst_file, "%s/num/META", switch_lib); */
 /*     rc = access(utstring_body(dst_file), F_OK); */
 /*     if (rc != 0) { */
-/* #if defined(DEBUG_fastbuild) */
+/* #if defined(PROFILE_fastbuild) */
 /*         if (coswitch_trace) log_trace(YEL "num pkg not installed" CRESET); */
 /* #endif */
 /*         return; */
@@ -1967,7 +1971,7 @@ void _symlink_ocaml_num(char *switch_lib, char *tgtdir)
         /* example, see topkg and topkg-care */
         return;
     }
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     if (coswitch_debug)
         LOG_DEBUG(0, "reading num dir %s", utstring_body(opamdir));
 #endif
@@ -1986,7 +1990,7 @@ void _symlink_ocaml_num(char *switch_lib, char *tgtdir)
             utstring_renew(dst);
             utstring_printf(dst, "%s/%s",
                             tgtdir, direntry->d_name);
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
             /* if (coswitch_debug_symlinks) */
                 /* LOG_DEBUG(0, "symlinking %s to %s\n", */
                 /*           utstring_body(src), */
@@ -2023,7 +2027,7 @@ void emit_ocaml_rtevents_pkg(char *runfiles,
                     switch_lib);
     int rc = access(utstring_body(rtevents_dir), F_OK);
     if (rc != 0) {
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
         /* if (coswitch_trace) */
         LOG_WARN(0, YEL "NOT FOUND: %s",
                  utstring_body(rtevents_dir));
@@ -2034,7 +2038,7 @@ void emit_ocaml_rtevents_pkg(char *runfiles,
                         switch_lib);
         int rc = access(utstring_body(rtevents_dir), F_OK);
         if (rc != 0) {
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
             /* if (coswitch_trace) */
             LOG_WARN(0, YEL "NOT FOUND: %s",
                      utstring_body(rtevents_dir));
@@ -2042,12 +2046,12 @@ void emit_ocaml_rtevents_pkg(char *runfiles,
             utstring_free(rtevents_dir);
             return;
         } else {
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
             LOG_WARN(0, YEL "FOUND: %s", utstring_body(rtevents_dir));
 #endif
             add_toplevel = true;
         }
-/* #if defined(DEBUG_fastbuild) */
+/* #if defined(PROFILE_fastbuild) */
 /*     } else { */
 /*         LOG_WARN(0, YEL "FOUND: %s", utstring_body(rtevents_dir)); */
 /* #endif */
@@ -2113,7 +2117,7 @@ void emit_ocaml_rtevents_pkg(char *runfiles,
 void _symlink_ocaml_rtevents(UT_string *rtevents_dir, char *tgtdir)
 {
     TRACE_ENTRY;
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     if (verbosity > 2) {
         LOG_DEBUG(0, "src: %s, dst: %s",
                   utstring_body(rtevents_dir), tgtdir);
@@ -2195,7 +2199,7 @@ void emit_ocaml_str_pkg(char *runfiles,
                     switch_lib);
     int rc = access(utstring_body(str_dir), F_OK);
     if (rc != 0) {
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
         /* if (coswitch_trace) */
         LOG_WARN(0, YEL "NOT FOUND: %s",
                  utstring_body(str_dir));
@@ -2206,7 +2210,7 @@ void emit_ocaml_str_pkg(char *runfiles,
                         switch_lib);
         int rc = access(utstring_body(str_dir), F_OK);
         if (rc != 0) {
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
             /* if (coswitch_trace) */
             LOG_WARN(0, YEL "NOT FOUND: %s",
                      utstring_body(str_dir));
@@ -2214,19 +2218,19 @@ void emit_ocaml_str_pkg(char *runfiles,
             utstring_free(str_dir);
             return;
         } else {
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
             // found lib/ocaml/str
             LOG_WARN(0, YEL "FOUND: %s", utstring_body(str_dir));
 #endif
             add_toplevel = true;
         }
-/* #if defined(DEBUG_fastbuild) */
+/* #if defined(PROFILE_fastbuild) */
 /*     } else { */
 /*         if (verbosity > 2) */
 /*             LOG_WARN(0, YEL "FOUND: %s", utstring_body(str_dir)); */
 /* #endif */
     } else {
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
         /* if (coswitch_trace) */
         LOG_WARN(0, YEL "FOUND: %s",
                  utstring_body(str_dir));
@@ -2319,7 +2323,7 @@ void emit_ocaml_str_pkg(char *runfiles,
 void _symlink_ocaml_str(UT_string *str_dir, char *tgtdir)
 {
     TRACE_ENTRY;
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     if (verbosity > 3) {
         LOG_DEBUG(0, "src: %s,\n\tdst %s",
                   utstring_body(str_dir),
@@ -2350,7 +2354,7 @@ void _symlink_ocaml_str(UT_string *str_dir, char *tgtdir)
     /*     if (verbosity > 1) */
     /*         LOG_DEBUG(0, "opened dir %s", utstring_body(str_dir)); */
     } else {
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
         LOG_DEBUG(0, "fopened %s as symlink src",
                   utstring_body(str_dir));
 #endif
@@ -2412,7 +2416,7 @@ void emit_ocaml_threads_pkg(char *runfiles,
                     switch_lib);
     int rc = access(utstring_body(threads_dir), F_OK);
     if (rc != 0) {
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
         /* if (coswitch_trace) */
         LOG_WARN(0, YEL "NOT FOUND: %s",
                  utstring_body(threads_dir));
@@ -2423,21 +2427,21 @@ void emit_ocaml_threads_pkg(char *runfiles,
                         switch_lib);
         int rc = access(utstring_body(threads_dir), F_OK);
         if (rc != 0) {
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
             /* if (coswitch_trace) */
             LOG_WARN(0, YEL "NOT FOUND: %s",
                      utstring_body(threads_dir));
 #endif
             utstring_free(threads_dir);
             return;
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
         } else {
             LOG_WARN(0, YEL "FOUND: %s", utstring_body(threads_dir));
             add_toplevel = true;
 
 #endif
         }
-/* #if defined(DEBUG_fastbuild) */
+/* #if defined(PROFILE_fastbuild) */
 /*     } else { */
 /*         LOG_WARN(0, YEL "FOUND: %s", utstring_body(threads_dir)); */
 /* #endif */
@@ -2506,7 +2510,7 @@ void emit_ocaml_threads_pkg(char *runfiles,
 void _symlink_ocaml_threads(UT_string *threads_dir, char *tgtdir)
 {
     TRACE_ENTRY;
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     if (verbosity > 2) {
         LOG_DEBUG(0, "  src: %s", utstring_body(threads_dir));
         LOG_DEBUG(0, "  dst: %s", tgtdir);
@@ -2628,7 +2632,7 @@ void emit_ocaml_ocamldoc_pkg(char *runfiles,
                     switch_lib);
     int rc = access(utstring_body(ocamldoc_dir), F_OK);
     if (rc != 0) {
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
         /* if (coswitch_trace) */
         LOG_WARN(0, YEL "NOT FOUND: %s",
                  utstring_body(ocamldoc_dir));
@@ -2639,19 +2643,19 @@ void emit_ocaml_ocamldoc_pkg(char *runfiles,
                         switch_lib);
         int rc = access(utstring_body(ocamldoc_dir), F_OK);
         if (rc != 0) {
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
             /* if (coswitch_trace) */
             LOG_WARN(0, YEL "NOT FOUND: %s",
                      utstring_body(ocamldoc_dir));
 #endif
             utstring_free(ocamldoc_dir);
             return;
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
         } else {
             LOG_WARN(0, YEL "FOUND: %s", utstring_body(ocamldoc_dir));
 #endif
         }
-/* #if defined(DEBUG_fastbuild) */
+/* #if defined(PROFILE_fastbuild) */
 /*     } else { */
 /*         LOG_WARN(0, YEL "FOUND: %s", utstring_body(ocamldoc_dir)); */
 /* #endif */
@@ -2772,7 +2776,7 @@ void emit_ocaml_unix_pkg(char *runfiles,
 
     int rc = access(utstring_body(unix_dir), F_OK);
     if (rc != 0) {
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
         /* if (coswitch_trace) */
         LOG_WARN(0, YEL "NOT FOUND: %s",
                  utstring_body(unix_dir));
@@ -2783,7 +2787,7 @@ void emit_ocaml_unix_pkg(char *runfiles,
                         switch_lib);
         int rc = access(utstring_body(unix_dir), F_OK);
         if (rc != 0) {
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
             /* if (coswitch_trace) */
             LOG_WARN(0, YEL "NOT FOUND: %s",
                      utstring_body(unix_dir));
@@ -2791,12 +2795,12 @@ void emit_ocaml_unix_pkg(char *runfiles,
             utstring_free(unix_dir);
             return;
         } else {
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
             LOG_WARN(0, YEL "FOUND: %s", utstring_body(unix_dir));
 #endif
             add_toplevel = true;
         }
-/* #if defined(DEBUG_fastbuild) */
+/* #if defined(PROFILE_fastbuild) */
 /*     } else { */
 /*         LOG_WARN(0, YEL "FOUND: %s", utstring_body(unix_dir)); */
 /* #endif */
@@ -3062,7 +3066,7 @@ void _symlink_ocaml_c_hdrs(char *switch_lib, char *tgtdir)
 void _symlink_ocaml_runtime_libs(char *switch_lib, char *tgtdir)
 {
     TRACE_ENTRY;
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     LOG_DEBUG(0, "\tswitch_lib: %s\n", switch_lib);
     LOG_DEBUG(0, "\ttgtdir    : %s\n", tgtdir);
 #endif
@@ -3115,7 +3119,7 @@ void _symlink_ocaml_runtime_libs(char *switch_lib, char *tgtdir)
             utstring_printf(dst, "%s/%s",
                             utstring_body(obazldir), /* tgtdir, */
                             direntry->d_name);
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
             /* if (coswitch_debug_symlinks) { */
                 LOG_DEBUG(0, "c_libs: symlinking %s to %s\n",
                           utstring_body(src),
@@ -3145,7 +3149,7 @@ void _symlink_ocaml_runtime_libs(char *switch_lib, char *tgtdir)
 void _symlink_ocaml_runtime_compiler_libs(char *switch_lib, char *tgtdir)
 {
     TRACE_ENTRY;
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
     LOG_DEBUG(0, "\tswitch_lib: %s\n", switch_lib);
     LOG_DEBUG(0, "\ttgtdir    : %s\n", tgtdir);
 #endif
@@ -3195,7 +3199,7 @@ void _symlink_ocaml_runtime_compiler_libs(char *switch_lib, char *tgtdir)
             utstring_printf(dst, "%s/%s",
                             utstring_body(obazldir), /* tgtdir, */
                             direntry->d_name);
-#if defined(DEBUG_fastbuild)
+#if defined(PROFILE_fastbuild)
             /* if (coswitch_debug_symlinks) { */
                 LOG_DEBUG(0, "c_libs: symlinking %s to %s\n",
                           utstring_body(src),
@@ -3291,12 +3295,12 @@ EXPORT void emit_ocaml_workspace(UT_string *registry,
 {
     TRACE_ENTRY;
     LOG_DEBUG(0, "switch_name: %s", switch_name);
-#if defined(DEBUG_fastbuild)
-    if (verbosity > 0) {
-        log_trace(BLU "EMIT_ocaml_workspace:" CRESET
+#if defined(PROFILE_fastbuild)
+    /* if (verbosity > 0) { */
+        LOG_TRACE(0, BLU "EMIT_ocaml_workspace:" CRESET
                   " switch_pfx:%s, dst: %s",
                   switch_pfx, coswitch_lib);
-    }
+    /* } */
 #endif
 
     char *switch_lib = opam_switch_lib(switch_name);
