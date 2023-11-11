@@ -81,8 +81,9 @@ extern char *findlibc_version;
 char *default_version = "0.0.0";
 int   default_compat  = 0;
 char *bazel_compat    = "6.0.0";
-char *rules_ocaml_version = "2.0.0";
 char *skylib_version      = "1.4.2";
+
+char *rules_ocaml_version = "2.1.0";
 
 int log_writes = 1; // threshhold for logging all writes
 int log_symlinks = 2;
@@ -93,6 +94,7 @@ char *pkg_path = NULL;
 enum OPTS {
     OPT_PKG = 0,
     OPT_SWITCH,
+    OPT_RULES_OCAML,
     FLAG_JSOO,
     FLAG_XDG_INSTALL,
     FLAG_CLEAN,
@@ -150,6 +152,8 @@ static struct option options[] = {
                  .flags=GOPT_ARGUMENT_REQUIRED},
     [OPT_SWITCH] = {.long_name="switch",.short_name='s',
                  .flags=GOPT_ARGUMENT_REQUIRED},
+    [OPT_RULES_OCAML] = {.long_name="rules_ocaml",
+                         .flags=GOPT_ARGUMENT_REQUIRED},
     [FLAG_XDG_INSTALL] = {.long_name="xdg", .short_name='x',
                           .flags=GOPT_ARGUMENT_FORBIDDEN},
     [FLAG_JSOO] = {.long_name="jsoo", .short_name='j',
@@ -554,6 +558,10 @@ int main(int argc, char *argv[])
         switch_name = options[OPT_SWITCH].argument;
     } else {
         switch_name = opam_switch_name();
+    }
+
+    if (options[OPT_RULES_OCAML].count) {
+        rules_ocaml_version = options[OPT_RULES_OCAML].argument;
     }
 
     /* if (bazel_env) { */
