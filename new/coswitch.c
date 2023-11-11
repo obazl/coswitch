@@ -924,6 +924,9 @@ int main(int argc, char *argv[])
         fprintf(stdout,
                 GRN "Switch prefix:    " CRESET
                 "%s\n", switch_pfx);
+        fprintf(stdout,
+                GRN "rules_ocaml version: " CRESET
+                "%s\n", rules_ocaml_version);
         /* fprintf(stdout, */
         /*         GRN "Coswitch root:    " CRESET */
         /*         "%s\n", utstring_body(coswitch_root)); */
