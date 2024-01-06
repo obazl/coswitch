@@ -38,9 +38,6 @@ static UT_string *meta_path;
 static char *switch_name;
 static char *coswitch_name; // may be "local"
 
-extern bool libs7_trace;
-extern int  libs7_debug;
-
 #if defined(PROFILE_fastbuild)
 #define DEBUG_LEVEL coswitch_debug
 int  DEBUG_LEVEL;
@@ -52,6 +49,10 @@ extern bool opamc_trace;
 extern int  opamc_debug;
 extern bool xdgc_trace;
 extern int  xdgc_debug;
+
+#define S7_DEBUG_LEVEL libs7_debug
+extern int  libs7_debug;
+extern bool libs7_trace;
 #endif
 
 bool quiet;
@@ -99,9 +100,9 @@ enum OPTS {
     FLAG_XDG_INSTALL,
     FLAG_CLEAN,
     FLAG_SHOW_CONFIG,
+#if defined(PROFILE_fastbuild)
     OPT_DEBUG_LIBS7,
     FLAG_TRACE_LIBS7,
-#if defined(PROFILE_fastbuild)
     FLAG_DEBUG,
     FLAG_TRACE,
     OPT_DEBUG_FINDLIBC,
@@ -163,12 +164,12 @@ static struct option options[] = {
     [FLAG_SHOW_CONFIG] = {.long_name="show-config",
                           .flags=GOPT_ARGUMENT_FORBIDDEN},
 
+#if defined(PROFILE_fastbuild)
     [OPT_DEBUG_LIBS7] = {.long_name="debug-libs7",
                            .flags=GOPT_ARGUMENT_REQUIRED},
     [FLAG_TRACE_LIBS7] = {.long_name="trace-libs7",
                              .flags=GOPT_ARGUMENT_FORBIDDEN},
 
-#if defined(PROFILE_fastbuild)
     [FLAG_DEBUG] = {.long_name="debug",.short_name='d',
                     .flags=GOPT_ARGUMENT_FORBIDDEN | GOPT_REPEATABLE},
     [FLAG_TRACE] = {.long_name="trace",.short_name='t',
@@ -211,6 +212,7 @@ void _set_options(struct option options[])
         verbosity = options[FLAG_VERBOSE].count;
     }
 
+#if defined(PROFILE_fastbuild)
     if (options[OPT_DEBUG_LIBS7].count) {
         errno = 0;
         long tmp = strtol(options[OPT_DEBUG_LIBS7].argument,
@@ -222,9 +224,13 @@ void _set_options(struct option options[])
             libs7_debug = (int)tmp;
         }
     }
+#endif
+
+#if defined(PROFILE_fastbuild)
     if (options[FLAG_TRACE_LIBS7].count) {
         libs7_trace = true;
     }
+#endif
 
 #if defined(PROFILE_fastbuild)
     if (options[FLAG_DEBUG].count) {
