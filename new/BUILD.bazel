@@ -1,10 +1,18 @@
+load("@makeheaders//rules:makeheaders.bzl", "makeheaders")
 load("//config/cc:CONFIG.bzl",
      "BASE_COPTS",
      "BASE_LINKOPTS",
      "PROFILE",
      "define_module_version")
 
-load("@makeheaders//rules:makeheaders.bzl", "makeheaders")
+# load("BUILD.bzl", "curr_repo")
+
+# LOCAL_REPO=repo_name()
+## ERROR: repo_name not defined (v 7.0)
+LOCAL_REPO=repository_name()[1:]   # "" or "coswitch~2.0.0" etc
+# MODSTR=module_name()            # "coswitch"
+
+# local_defines = [repository_name()[1:]]
 
 # TOOLCHAINS = ["//:module_profiles"]
 
@@ -56,7 +64,10 @@ cc_binary(
         "@platforms//os:linux": ["_XOPEN_SOURCE=500"],
         "//conditions:default": []
     }),
-    local_defines = define_module_version(),
+    local_defines = define_module_version() + [
+        # "MODSTR=\\\"{}\\\"".format(MODSTR),
+        "LOCAL_REPO=\\\"{}\\\"".format(LOCAL_REPO),
+    ],
     linkstatic = 1,
     # toolchains = TOOLCHAINS,
 )

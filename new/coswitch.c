@@ -637,12 +637,12 @@ int main(int argc, char *argv[])
     UT_string *runfiles_root;
     utstring_new(runfiles_root);
     if (bazel_env) {
-        if (strlen(BAZEL_CURRENT_REPOSITORY) == 0) {
+        if (strlen(LOCAL_REPO) == 0) {
             utstring_printf(runfiles_root, "%s",
                             realpath("new", NULL));
         } else {
             char *rp = realpath("external/"
-                                BAZEL_CURRENT_REPOSITORY,
+                                LOCAL_REPO,
                                 NULL);
             /* log_debug("PWD: %s", getcwd(NULL,0)); */
             utstring_printf(runfiles_root, "%s/new", rp);
