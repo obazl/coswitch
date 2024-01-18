@@ -5,16 +5,9 @@ load("//config/cc:CONFIG.bzl",
      "PROFILE",
      "define_module_version")
 
-# load("BUILD.bzl", "curr_repo")
-
 # LOCAL_REPO=repo_name()
 ## ERROR: repo_name not defined (v 7.0)
 LOCAL_REPO=repository_name()[1:]   # "" or "coswitch~2.0.0" etc
-# MODSTR=module_name()            # "coswitch"
-
-# local_defines = [repository_name()[1:]]
-
-# TOOLCHAINS = ["//:module_profiles"]
 
 exports_files(["coswitch.c"])
 
@@ -34,25 +27,12 @@ cc_binary(
         "@opamc//lib:opamc",
         "@xdgc//lib:xdgc",
         "@gopt//lib:gopt",
-        # "@semverc//src:semverc",
-        # "@liblogc//lib:logc",
         "@uthash//lib:uthash",
         "//new/bazel"
     ],
     copts = BASE_COPTS + [
-        # "-I$(@)/src",
-        # "-I$(GENDIR)/$(@)/src",
-        "-I$(GENDIR)/new",
-        # "-I$(GENDIR)/$(@)/src/opam",
-        # "-I$(GENDIR)/$(@)/test/opam",
-
-        # "-I$(@libs7)/src",
-        # "-I$(GENDIR)/$(@libs7)/src",
-
-        # "-I$(GENDIR)/$(@findlibc)/lib",
-        # # "-I$(@semverc)/src",
-        # "-I$(@cwalk)/include",
-        # "-I$(@gopt)/src",
+        "-I$(GENDIR)/{}/new".format(repository_name()[1:]),
+        "-I$(GENDIR)/external/{}/new".format(repository_name()[1:]),
     ],
     features = ["layering_check"],
     linkopts = BASE_LINKOPTS + [
@@ -65,11 +45,9 @@ cc_binary(
         "//conditions:default": []
     }),
     local_defines = define_module_version() + [
-        # "MODSTR=\\\"{}\\\"".format(MODSTR),
         "LOCAL_REPO=\\\"{}\\\"".format(LOCAL_REPO),
     ],
     linkstatic = 1,
-    # toolchains = TOOLCHAINS,
 )
 
 ########
@@ -93,12 +71,4 @@ makeheaders(
             "@makeheaders//logging:macros_ndebug.h"
         ]
     }),
-    # ] + select({
-    #     "//config/profile:dev?": [
-    #         "//src:macros_debug.h",
-    #     ],
-    #     "//conditions:default":   [
-    #         "//src:macros_ndebug.h",
-    #     ]
-    # }),
 )

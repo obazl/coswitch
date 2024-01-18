@@ -1,6 +1,8 @@
 = coswitch
 :toc:
-OBazl coswitch
+
+Bazel-OPAM integration.
+
 
 == Usage
 
@@ -27,7 +29,7 @@ enable `bazel_dep` resolution. To avoid this you can install the
 `coswitch` executable on your PATH so you can run it independent of
 Bazel. See instructions below.
 
-=== configuration
+=== Configuration
 
 You can run `@coswitch` from any directory equipped with the following
 files: `.bazelrc`, `MODULE.bazel`, and `WORKSPACE.bazel`. If you
@@ -35,18 +37,25 @@ install it locally, as described below, you can run it independent of Bazel.
 
 [source,title=".bazelrc"]
 ----
-common --enable_bzlmod                                                          <1>
-## common --registry=/path/to/coswitch/registry                                 <2>
+## common --enable_bzlmod  # enabled by default for Bazel 7+                    <1>
+try-import %workspace%/.config/coswitch_registry.bazelrc                        <2>
 common --registry=https://raw.githubusercontent.com/obazl/registry/main/        <3>
 common --registry=https://bcr.bazel.build                                       <4>
 try-import .config/user.bazelrc                                                 <5>
 ----
-<1> Required.  The `common` prefix on these lines directs Bazel to use these directives for all commands (`build`, `test`, `run`, `query`).
-<2> Add this line _after_ running `$ bazel run @coswitch//new`
+<1> The `common` prefix on these lines directs Bazel to use these directives for all commands (`build`, `test`, `run`, `query`).
+<2> Imported file must contain `--registry=...` for your coswitch; see below
 <3> `@coswitch` is not yet available in the link:https://github.com/bazelbuild/bazel-central-registry[Bazel Central Repository] (BRC)
 <4> URL for the BCR. Bazel automatically uses it _**if**_ no `--registry` directive is used; otherwise it must be explicitly required, as here.
 <5> Optional. Will be ignored if `.config/user.bazelrc` does not
 exist. Do not put this file under version control. This allows each user to customize builds by adding Bazel directives. *Any file name can be used; .config/user.bazelrc is just an OBazl convention.*
+
+[source,title=".config/coswitch_registry.bazelrc"]
+----
+common --registry=file:///path/to/coswitch/registry      <1>
+----
+<1> Path created by coswitch; for example, `/home/<uid>/.opam/5.1.1/share/obazl`
+
 
 [source,title="MODULE.bazel"]
 ----
@@ -54,7 +63,7 @@ module(
     name = "mymodule",                               <1>
     version = "0.0.0",
     compatibility_level = 0,
-    bazel_compatibility = [">=6.0.0"]                <2>
+    bazel_compatibility = [">=7.0.0"]                <2>
 )
 bazel_dep(name = "coswitch", version = "x.y.z")      <3>
 ----
@@ -67,28 +76,31 @@ bazel_dep(name = "coswitch", version = "x.y.z")      <3>
 #                                <1>
 ----
 <1> With bzlmod enabled this file will be ignored but it must exist.
-This constraint will be removed in Bazel 7.0, due out in late 2023.
+This constraint will be removed in a future version of Bazel.
 
-=== execution
+=== Execution
 
 ----
 $ bazel run @coswitch//new
-INFO: Analyzed target @coswitch~override//new:new (7 packages loaded, 66 targets configured).
+INFO: Analyzed target @coswitch~2.3.0//new:new (7 packages lo
+aded, 66 targets configured).
 INFO: Found 1 target...                                            <1>
-Target @coswitch~override//new:new up-to-date:
-  .bazel/bin/external/coswitch~override/new/new
+Target @coswitch~2.3.0//new:new up-to-date:
+  .bazel/bin/external/coswitch~2.3.0/new/new
 INFO: Elapsed time: 0.080s, Critical Path: 0.00s
 INFO: 1 process: 1 internal.
 INFO: Build completed successfully, 1 total action
-INFO: Running command line: .bazel/bin/external/coswitch~override/new/new
+INFO: Running command line: .bazel/bin/external/coswitch~2.3.0/new/new
 Switch name:      4.14.0                                       <2>
-Compiler version: 4.14.0                                       <2>
-Switch prefix:    $HOME/.opam/4.14.0                           <2>
-Coswitch:         $HOME/.opam/4.14.0/share/obazl               <2>
-Registry:         $HOME/.opam/4.14.0/share/obazl               <2>
+Compiler version: 4.14.0
+Switch prefix:    $HOME/.opam/4.14.0                           <3>
+rules_ocaml version: 2.1.0                                     <3>
+Coswitch:         $HOME/.opam/4.14.0/share/obazl               <3>
+Registry:         $HOME/.opam/4.14.0/share/obazl               <3>
 ----
 <1> `INFO` messages are printed by Bazel
-<2> Printed by `@coswitch//new`  (with `$HOME` expanded)
+<2> By default coswitch is created for current switch; override with `-s` or `--switch`
+<3> Printed by `@coswitch//new`  (with `$HOME` expanded)
 
 By default each coswitch is installed in the corresponding switch, in
 `$OPAM_SWITCH_PREFIX/share/obazl`. To instead install to
@@ -145,8 +157,112 @@ run a bazel command, control will be passed to this script, which runs
 the appropriate `--registry` directive and adds it to the bazel
 command.
 
+=== Build target labels
 
-=== installation
+Once `@coswitch//new` has done its work, the packages in the switch
+are available to Bazel build programs as standard Bazel labels. The
+labels are constructed according to a simple schema: package `p`
+becomes `@p//lib/p`; package `p.q.r` becomes `@p//lib/q/r`.
+Executables are labelled `@p//bin/p`; they are also accesible as
+`@ocaml//bin:p`.
+
+Some examples:
+
+[cols="1,1",width="50%"]
+|====
+| OPAM | Bazel
+
+| `ounit2` | `@ounit2//lib/ounit2`
+| `mtime` | `@mtime//lib/mtime`
+| `mtime.clock.os` | `@mtime//lib/clock/os`
+| `yojson` | `@yojson//lib/yojson`
+|====
+
+==== The `@ocaml` module
+
+Most (all?) OPAM packages contain one `META` file in their root
+directories. The standard compiler distributions are a little
+different. They contain a small number of "distrib-packages":
+
+* compiler-libs
+* dynlink
+* ocamldoc
+* runtime_events (>=5.0.0)
+* stdlib
+* str
+* threads
+* unix
+
+These are packages (so they can be listed as dependencies), but they
+are included in the compiler distributions rather than as
+free-standing OPAM/findlib packages.
+
+Special case: `num`. Implemented as a free-standing pkg, but installs
+its files to the standard lib dir (lib/ocaml).
+
+Prior to version `5.0.0` the distributions contained no `META` files
+for these packages within the `ocaml` package. Instead, the
+distrib-packages were expressed as OPAM top-level "virtual" packages
+with redirection to artifacts in `lib/ocaml`. They would be installed by OPAM when the compiler was installed.
+
+For example, the `dynlink` package for `4.14.0` is represented by
+`<opam-root>/4.14.0/lib/dynlink`, which contains only a `META` file
+indicating that the `dynlink` archive files are found in
+`<opam-root>/4.14.0/ocaml`
+
+Starting with `5.0.0` the distib-packages are expressed by eight
+nested `META` files:
+
+----
+lib/ocaml/compiler-libs/META
+lib/ocaml/dynlink/META
+lib/ocaml/ocamldoc/META
+lib/ocaml/runtime_events/META
+lib/ocaml/stdlib/META
+lib/ocaml/str/META
+lib/ocaml/threads/META
+lib/ocaml/unix/META
+----
+
+These packages are no longer represented by toplevel subdirectories
+within the switch' `lib` subdirectory.
+
+`@coswitch//new` creates a Bazel package for each of these as
+subpackages of the `@ocaml` module. For example,
+`@ocaml//lib/dynlink`. For compatibility it also creates a Bazel
+module for each; for example, `@dynlink//lib/dynlink`.  The build targets in these packages are aliased to those in the `@ocaml` module:
+
+    @dynlink//lib/dynlink => @ocaml//lib/dynlink
+
+`@coswitch//new` has special logic for translating the compiler
+distribution itself.
+
+[cols="2,3"]
+|====
+| Bazel pkg | Imports (by symlinks to <switch-prefix>)
+| `@ocaml//bin` |  `bin`
+| `@ocaml//lib/compiler-libs` | `lib/ocaml/compiler-libs`
+| `@ocaml//lib/compiler-libs:bytecomp` |  `lib/ocaml/compiler-libs/ocamlbytecomp.cmx[a]`
+| `@ocaml//lib/compiler-libs:common` |  alias to `@ocaml//lib/compiler-libs:common`
+| `@ocaml//lib/compiler-libs:optcomp` |  alias to `@ocaml//lib/compiler-libs:optcomp`
+| `@ocaml//lib/compiler-libs:toplevel` |  alias to `@ocaml//lib/compiler-libs:toplevel`
+| `@ocaml//lib/dynlink` | `lib/ocaml/dynlink`
+| `@ocaml//lib/ocamldoc` | `lib/ocaml/ocamldoc`
+| `@ocaml//lib/runtime` | `lib/ocaml` - stdlib, std_exit etc.
+| `@ocaml//lib/sdk` | C sdk headers `lib/ocaml/caml`
+| `@ocaml//lib/str` | `lib/ocaml`
+| `@ocaml//lib/stublibs` | `lib/ocaml`
+| `@ocaml//lib/threads` | `lib/ocaml/threads/threads.cmx[a]`
+| `@ocaml// unix` | `lib/ocaml`
+| |
+| `@ocaml//platform` | OBazl-specific helper pkg
+| `@ocaml//toolchain` | OBazl-specific helper pkg
+| `@ocaml//version` | OBazl-specific helper pkg
+|====
+
+
+
+=== Installation
 
 ----
 $ bazel run @coswitch//install -c opt
@@ -160,7 +276,15 @@ You can install the executable to a different directory by passing `
 -- -b /path/to/bindir`.
 
 Once you have installed `coswitch` on your local system you can remove
-its `bazel_dep` from your MODULE.bazel file, and run `$ coswitch`.
+its `bazel_dep` from your MODULE.bazel file, and run [nowrap]`$ coswitch`.
+
+=== Troubleshooting
+
+Misconfigured repositories may result in a message like the following:
+
+```
+ERROR: Error computing the main repository mapping: in module dependency chain <root> -> unity@2.5.2.bzl.1: module not found in registries: unity@2.5.2.bzl.1
+```
 
 == How It Works
 
@@ -310,109 +434,6 @@ use only, so instead the `source.json` file looks like this:
 
 Together, `bazel_registry.json` and `yojson/0.0.0/source.json` indicate that the sources for `yojson` are located at `$HOME/.local/share/obazl/opam/fiveone/lib/yojson`.
 
-=== Build target labels
-
-Once `@coswitch//new` has done its work, the packages in the switch
-are available to Bazel build programs as standard Bazel labels. The
-labels are constructed according to a simple schema: package `p`
-becomes `@p//lib/p`; package `p.q.r` becomes `@p//lib/q/r`.
-Executables are labelled `@p//bin/p`; they are also accesible as
-`@ocaml//bin:p`.
-
-Some examples:
-
-[cols="1,1",width="50%"]
-|===
-| OPAM | Bazel
-
-| `ounit2` | `@ounit2//lib/ounit2`
-| `mtime` | `@mtime//lib/mtime`
-| `mtime.clock.os` | `@mtime//lib/clock/os`
-| `yojson` | `@yojson//lib/yojson`
-|===
-
-=== The `@ocaml` module
-
-Most (all?) OPAM packages contain one `META` file in their root
-directories. The standard compiler distributions are a little
-different. They contain a small number of "distrib-packages":
-
-* compiler-libs
-* dynlink
-* ocamldoc
-* runtime_events (>=5.0.0)
-* stdlib
-* str
-* threads
-* unix
-
-These are packages (so they can be listed as dependencies), but they
-are included in the compiler distributions rather than as
-free-standing OPAM/findlib packages.
-
-Special case: `num`. Implemented as a free-standing pkg, but installs
-its files to the standard lib dir (lib/ocaml).
-
-Prior to version `5.0.0` the distributions contained no `META` files
-for these packages within the `ocaml` package. Instead, the
-distrib-packages were expressed as OPAM top-level "virtual" packages
-with redirection to artifacts in `lib/ocaml`. They would be installed by OPAM when the compiler was installed.
-
-For example, the `dynlink` package for `4.14.0` is represented by
-`<opam-root>/4.14.0/lib/dynlink`, which contains only a `META` file
-indicating that the `dynlink` archive files are found in
-`<opam-root>/4.14.0/ocaml`
-
-Starting with `5.0.0` the distib-packages are expressed by eight
-nested `META` files:
-
-----
-lib/ocaml/compiler-libs/META
-lib/ocaml/dynlink/META
-lib/ocaml/ocamldoc/META
-lib/ocaml/runtime_events/META
-lib/ocaml/stdlib/META
-lib/ocaml/str/META
-lib/ocaml/threads/META
-lib/ocaml/unix/META
-----
-
-These packages are no longer represented by toplevel subdirectories
-within the switch' `lib` subdirectory.
-
-`@coswitch//new` creates a Bazel package for each of these as
-subpackages of the `@ocaml` module. For example,
-`@ocaml//lib/dynlink`. For compatibility it also creates a Bazel
-module for each; for example, `@dynlink//lib/dynlink`.  The build targets in these packages are aliased to those in the `@ocaml` module:
-
-    @dynlink//lib/dynlink => @ocaml//lib/dynlink
-
-`@coswitch//new` has special logic for translating the compiler
-distribution itself.
-
-[cols="2,3"]
-|===
-| Bazel pkg | Imports (by symlinks to <switch-prefix>)
-| `@ocaml//bin` |  `bin`
-| `@ocaml//lib/compiler-libs` | `lib/ocaml/compiler-libs`
-| `@ocaml//lib/compiler-libs:bytecomp` |  `lib/ocaml/compiler-libs/ocamlbytecomp.cmx[a]`
-| `@ocaml//lib/compiler-libs:common` |  alias to `@ocaml//lib/compiler-libs:common`
-| `@ocaml//lib/compiler-libs:optcomp` |  alias to `@ocaml//lib/compiler-libs:optcomp`
-| `@ocaml//lib/compiler-libs:toplevel` |  alias to `@ocaml//lib/compiler-libs:toplevel`
-| `@ocaml//lib/dynlink` | `lib/ocaml/dynlink`
-| `@ocaml//lib/ocamldoc` | `lib/ocaml/ocamldoc`
-| `@ocaml//lib/runtime` | `lib/ocaml` - stdlib, std_exit etc.
-| `@ocaml//lib/sdk` | C sdk headers `lib/ocaml/caml`
-| `@ocaml//lib/str` | `lib/ocaml`
-| `@ocaml//lib/stublibs` | `lib/ocaml`
-| `@ocaml//lib/threads` | `lib/ocaml/threads/threads.cmx[a]`
-| `@ocaml// unix` | `lib/ocaml`
-| |
-| `@ocaml//platform` | OBazl-specific helper pkg
-| `@ocaml//toolchain` | OBazl-specific helper pkg
-| `@ocaml//version` | OBazl-specific helper pkg
-|====
-
 === Registry selection
 
 See section above on `--registry` directives.
@@ -420,18 +441,20 @@ See section above on `--registry` directives.
 
 == Creating an OPAM switch
 
-First update your OPAM installation: `$ opam update`
+First update your OPAM installation: `$ opam update`.
 
 Then create a switch, giving it a name and a compiler version. Synax: [nobreak]`opam switch create <name> <compiler id>` or just [nobreak]`opam switch
-create <compiler id>`.
+create <compiler id>`.  To list available compilers: `$ opam switch list-available`
 
-To list available compilers: `$ opam switch list-available`
+Example:
 
-    $ opam switch create fiveone 5.1.0
+    $ opam switch create my511 5.1.1
 
 This should install the switch and make it the "current" switch. Verify:
 
     $ opam switch
+
+NOTE: To make sure your shell is in sync with OPAM: `$ eval $(opam env)`.
 
 Now install the packages you need:
 
