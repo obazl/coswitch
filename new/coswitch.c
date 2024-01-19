@@ -230,9 +230,7 @@ void _set_options(struct option options[])
     if (options[FLAG_TRACE_LIBS7].count) {
         libs7_trace = true;
     }
-#endif
 
-#if defined(PROFILE_fastbuild)
     if (options[FLAG_DEBUG].count) {
         coswitch_debug = options[FLAG_DEBUG].count;
     }

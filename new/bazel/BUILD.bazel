@@ -54,7 +54,8 @@ cc_library(
         # "-I$(GENDIR)/$(@)/new",
         # "-I$(GENDIR)/$(@)/new/bazel",
 
-        "-Wno-gnu-statement-expression-from-macro-expansion"
+        # only for clang 15/
+        # "-Wno-gnu-statement-expression-from-macro-expansion"
     ],
     defines = PROFILE + select({
         ## for dirent->d_type macros:
