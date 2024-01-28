@@ -233,4 +233,5 @@ EXE=$(rlocation coswitch/new/new)
 # echo "EXE: ${EXE}"
 
 ## per xdg standard:
+install ${DOPTS} ${bin}
 install ${COPTS} ${EXE} ${bin}/coswitch
