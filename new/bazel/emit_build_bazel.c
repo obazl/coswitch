@@ -61,7 +61,7 @@ extern bool verbose;
 extern int debug;
 extern bool trace;
 
-/* extern */ bool stdlib_root;
+/* extern bool stdlib_root; */
 
 /* extern */ UT_string *bzl_switch_pfx;
 
@@ -70,9 +70,9 @@ extern bool trace;
 /* char *buildfile_prefix = "@//" HERE_OBAZL_ROOT "/buildfiles"; */
 /* was: "@//.opam.d/buildfiles"; */
 
-long *KPM_TABLE;
+/* long *KPM_TABLE; */
 
-FILE *opam_resolver;
+/* FILE *opam_resolver; */
 
 UT_string *repo_name = NULL;
 
@@ -3572,7 +3572,7 @@ EXPORT void emit_build_bazel(// char *ws_name,
                 */
                 /* stdlib = true; */
                 directory++;
-                stdlib_root = true;
+                /* stdlib_root = true; */
                 if (strlen(directory) == 1)
                     utstring_printf(new_filedeps_path, "%s", "ocaml");
                 else

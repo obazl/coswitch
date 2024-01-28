@@ -48,14 +48,14 @@ extern int indent;
 extern int delta;
 #endif
 
-bool stdlib_root = false;
+/* bool stdlib_root = false; */
 
 /* char *buildfile_prefix = "@//" HERE_OBAZL_ROOT "/buildfiles"; */
 /* was: "@//.opam.d/buildfiles"; */
 
-long *KPM_TABLE;
+/* long *KPM_TABLE; */
 
-FILE *opam_resolver;
+/* FILE *opam_resolver; */
 
 extern UT_string *repo_name;
 
