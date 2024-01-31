@@ -225,12 +225,13 @@ lib/ocaml/unix/META
 ----
 
 These packages are no longer represented by toplevel subdirectories
-within the switch' `lib` subdirectory.
+within the switch's `lib` subdirectory.
 
-`@coswitch//new` creates a Bazel package for each of these as
-subpackages of the `@ocaml` module. For example,
-`@ocaml//lib/dynlink`. For compatibility it also creates a Bazel
-module for each; for example, `@dynlink//lib/dynlink`.  The build targets in these packages are aliased to those in the `@ocaml` module:
+`@coswitch//new` creates a Bazel package for each of these within the
+`@ocaml` module. For example, `@ocaml//lib/dynlink`. For compatibility
+it also creates a Bazel module for each; for example,
+`@dynlink//lib/dynlink`. The build targets in these packages are
+aliased to those in the `@ocaml` module:
 
     @dynlink//lib/dynlink => @ocaml//lib/dynlink
 
@@ -256,6 +257,7 @@ distribution itself.
 | `@ocaml// unix` | `lib/ocaml`
 | |
 | `@ocaml//platform` | OBazl-specific helper pkg
+| `@ocaml//runtime` | OBazl-specific helper pkg
 | `@ocaml//toolchain` | OBazl-specific helper pkg
 | `@ocaml//version` | OBazl-specific helper pkg
 |====
@@ -339,6 +341,9 @@ If installed with ` -- --xdg`:
 .local/share/obazl/opam/fiveone/lib/yojson
 ├── MODULE.bazel
 ├── WORKSPACE.bazel
+├── bin
+│   ├── BUILD.bazel
+│   └── ydump -> $HOME/.opam/fiveone/bin/ydump
 └── lib
     └── yojson
         ├── BUILD.bazel
@@ -365,8 +370,8 @@ has this structure (documented at
 link:https://bazel.build/external/registry[Bazel registries]):
 
 ----
-$ tree -L 1 .opam/510a/share/obazl/
-.opam/510a/share/obazl/
+$ tree -L 1 .opam/fiveone/share/obazl/
+.opam/fiveone/share/obazl/
 ├── bazel_registry.json
 ├── lib                        <1>
 └── modules                    <2>
@@ -384,7 +389,7 @@ $ tree -L 1 .local/share/obazl/registry/fiveone
 └── modules
 ----
 
-The `bazel_registry.json` file points to the coswitch:
+The `bazel_registry.json` file contains the path to pkg entries in the OPAM switch:
 
 ..opam/fiveone/share/obazl/bazel_registry.json
 ----
@@ -395,6 +400,8 @@ The `bazel_registry.json` file points to the coswitch:
 ----
 <1> Not used
 <2> Relative to cwd; serves as based dir for relative paths in registry records
+
+For XDG installations:
 
 ..local/share/obazl/registry/fiveone/bazel_registry.json
 ----
@@ -411,16 +418,19 @@ The `modules` subdirectory contains one record per Bazel module. The record for 
 ----
 $ tree .local/share/obazl/registry/fiveone/modules/yojson                                                              [fiveone]
 .local/share/obazl/registry/fiveone/modules/yojson
-├── 0.0.0
+├── 0.0.0                               <1>
 │   ├── MODULE.bazel
 │   └── source.json
 └── metadata.json
 ----
+<1> Coswitch entries always use version 0.0.0, which resolves to whatever version is installed in the OPAM switch. This obviates the need to keep `bazel_dep` entries in `MODULE.bazel` files in sync with the OPAM switch.
+
 
 The `source.json` file contains the information Bazel needs to find
-the sources of the `yojson` module. In a networked registry, this
-would be a URL and integrity checksum. But this registry is for local
-use only, so instead the `source.json` file looks like this:
+the "source" (i.e. OPAM package) for the Bazel module. In a
+networked registry, this would be a URL and integrity checksum. But
+this registry is for local use only, so instead the `source.json` file
+looks like this:
 
 [source,json]
 ----
