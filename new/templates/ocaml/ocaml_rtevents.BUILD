@@ -9,7 +9,7 @@ ocaml_import(
     sigs       = glob(["*.cmi"]),
     archive    =  select({
         "@ocaml//platform/emitter:vm" : "runtime_events.cma",
-        "@ocaml//platform/emitter:sys": "runtime.cmxa",
+        "@ocaml//platform/emitter:sys": "runtime_events.cmxa",
     }, no_match_error="Bad platform"),
     afiles   = select({
         "@ocaml//platform/emitter:vm" : [],
