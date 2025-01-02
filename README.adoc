@@ -1,8 +1,39 @@
-= coswitch
+>= coswitch
 :toc:
 
 Bazel-OPAM integration.
 
+== tl;dr
+
+Detailed documentation below.
+
+First: configure an OPAM switch. By default, coswitch will use the current switch.
+
+[source,title=".bazelrc"]
+----
+## common --enable_bzlmod  # enabled by default for Bazel 7+
+try-import %workspace%/.config/coswitch_registry.bazelrc
+common --registry=https://raw.githubusercontent.com/obazl/registry/main/
+common --registry=https://bcr.bazel.build
+try-import .config/user.bazelrc
+----
+
+[source,title="MODULE.bazel"]
+----
+module(
+    name = "mymodule",
+    version = "0.0.0",
+    compatibility_level = 0,
+    bazel_compatibility = [">=7.0.0"]
+)
+bazel_dep(name = "coswitch", version = "2.3.0")
+----
+
+----
+$ bazel run @coswitch//new
+----
+
+Next step: create or configure a project.  See link:https://obazl.github.io/docs_obazl/[The OBazl Book] for guidance.
 
 == Usage
 
@@ -70,6 +101,8 @@ bazel_dep(name = "coswitch", version = "x.y.z")      <3>
 <1> A common convention is to use the same name for the module and the basename of the root directory, but this is not a requirement.
 <2> The least Bazel version that supports Bazel modules (?)
 <3> See the Releases page for the latest version identifier.
+
+NOTE: For recent versions of Bazel, the WORKSPACE.bazel file is not needed.
 
 [source,title="WORKSPACE.bazel"]
 ----
