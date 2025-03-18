@@ -1,5 +1,4 @@
 = coswitch
-:toc:
 
 WARNING: OBSOLETE. Use https://github.com/obazl/tools_opam[tools_opam] instead.
 
