@@ -1,3 +1,4 @@
+load("@rules_cc//cc:defs.bzl", "cc_binary")
 load("@makeheaders//rules:makeheaders.bzl", "makeheaders")
 load("//config/cc:CONFIG.bzl",
      "BASE_COPTS",
@@ -16,23 +17,23 @@ cc_binary(
     name  = "new",
     visibility = ["//visibility:public"],
     srcs  = [
-        "coswitch.c",
+        "main.c",
         ":mkhdrs",
     ],
     deps = [
-        "@cwalk//src:cwalk",
-        "@findlibc//lib:findlibc",
+        "@coswitch//lib:coswitch",
         "@liblogc//lib:logc",
-        "@libs7//lib:s7",
-        "@opamc//lib:opamc",
-        "@xdgc//lib:xdgc",
         "@gopt//lib:gopt",
         "@uthash//lib:uthash",
-        "//new/bazel"
+        # "@runfiles//lib:runfiles",
+        # "@cwalk//src:cwalk",
+        # "@findlibc//lib:findlibc",
+        # "@libs7//lib:s7",
+        # "@opamc//lib:opamc",
+        # "@xdgc//lib:xdgc",
     ],
     copts = BASE_COPTS + [
-        "-I$(GENDIR)/{}/new".format(repository_name()[1:]),
-        "-I$(GENDIR)/external/{}/new".format(repository_name()[1:]),
+        "-I$(GENDIR)"
     ],
     features = ["layering_check"],
     linkopts = BASE_LINKOPTS + [
@@ -46,6 +47,8 @@ cc_binary(
     }),
     local_defines = define_module_version() + [
         "LOCAL_REPO=\\\"{}\\\"".format(LOCAL_REPO),
+        # "BAZEL_CURRENT_REPOSITORY=\\\"{}\\\"".format(repo_name()),
+        "BAZEL_CURRENT_REPOSITORY=\\\"{}\\\"".format(package_relative_label("@coswitch").repo_name)
     ],
     linkstatic = 1,
 )
@@ -54,21 +57,16 @@ cc_binary(
 makeheaders(
     name = "mkhdrs",
     hdrs_srcs = [
-        "coswitch.c",
+        "main.c",
     ],
     additional_srcs = [
-        "//new/bazel:emit_build_bazel.c",
-        "//new/bazel:emit_ocaml_repo.c",
-        "//new/bazel:emit_pkg_bindir.c",
-        "//new/bazel:registry.c",
-        "//src/utils:utils.c",
-        "@makeheaders//logging:ansi_colors.h"
+        "@liblogc//macros:ansi_colors.h"
     ] + select({
-        "@makeheaders//compilation_mode:fastbuild": [
-            "@makeheaders//logging:macros_debug.h"
+        "@obazl_config_cc//profile:dev?": [
+            "@liblogc//macros:logging_debug.h"
         ],
         "//conditions:default": [
-            "@makeheaders//logging:macros_ndebug.h"
+            "@liblogc//macros:logging_ndebug.h"
         ]
     }),
 )

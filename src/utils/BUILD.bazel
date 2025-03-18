@@ -53,23 +53,23 @@ makeheaders(
     name = "mkhdrs",
     hdrs_srcs = ["utils.c"],
     additional_srcs = [
-        "@makeheaders//logging:ansi_colors.h"
+        "@liblogc//macros:ansi_colors.h"
     ] + select({
-        "@makeheaders//compilation_mode:fastbuild": [
-            "@makeheaders//logging:macros_debug.h"
+        "@obazl_config_cc//profile:dev?": [
+            "@liblogc//macros:logging_debug.h"
         ],
         "//conditions:default": [
-            "@makeheaders//logging:macros_ndebug.h"
+            "@liblogc//macros:logging_ndebug.h"
         ]
     }),
  # [
  #        "//src:ansi_colors.h",
  #    ] + select({
- #        "//config/compilation_mode:fastbuild?": [
- #            "//src:macros_debug.h",
+ #     "@obazl_config_cc//profile:dev?": [
+ #            "//src:logging_debug.h",
  #        ],
  #        "//conditions:default":   [
- #            "//src:macros_ndebug.h",
+ #            "//src:logging_ndebug.h",
  #        ]
  #    })
 )

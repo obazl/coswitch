@@ -1,6 +1,0 @@
-exports_files([
-    "platform.BUILD",
-    "arch.BUILD",
-    "executor.BUILD",
-    "emitter.BUILD"
-])
